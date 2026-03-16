@@ -1,0 +1,3 @@
+2026-03-16 22:26:12,353 INFO           anuga.utilities.log:0   |Logfile is './anuga_20260316_222612.log' with logging level of INFO, console logging level is CRITICAL
+2026-03-16 22:26:12,354 CRITICAL                   caching:1861|WARNING: Directory /home/xin/.python_cache/ could not be created.
+2026-03-16 22:26:12,354 CRITICAL                   caching:1867|Using directory /tmp/ instead
