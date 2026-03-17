@@ -9,7 +9,7 @@
 核心概念：
 1. GPU Inlet (最新方式): 
    - 初始化: domain.gpu_interface.init_gpu_inlets()
-   - 添加: domain.gpu_inlets.add_inlet(region, Q=function, label=name, mode="cpu_compatible"|"fast")
+   - 添加: domain.gpu_inlets.add_inlet(region, Q=function, label=name, mode="fast")
    - 应用: domain.gpu_inlets.apply()
 
 2. GPU 边界更新 (最新方式): 
@@ -207,7 +207,7 @@ Inlet 是向域内注入流量的区域。这里我们添加两个 inlet：
 - inlet1: 圆形区域，中心 [10, 10]，半径 20
 - inlet2: 圆形区域，中心 [50, 20]，半径 10
 
-两个 inlet 使用不同的模式来展示 GPU 新 API 的灵活性。
+本仓库的耦合实现统一使用 fast mode。
 """
 print("[3] 添加 inlet 区域...")
 
@@ -227,13 +227,13 @@ region1 = anuga.Region(
 - region1: 作用区域
 - Q=q1: 流量函数，参数为时间 t，返回值单位 m³/s
 - label="inlet1": inlet 标识，用于日志和诊断
-- mode="cpu_compatible": 计算模式（见下面的对比说明）
+- mode="fast": 计算模式（本仓库仅支持 fast）
 """
 domain.gpu_inlets.add_inlet(
     region1,
     Q=q1,
     label="inlet1",
-    mode="cpu_compatible"
+    mode="fast"
 )
 
 """
@@ -246,24 +246,19 @@ region2 = anuga.Region(
 )
 
 """
-添加第二个 inlet - 使用另一个模式进行对比
+添加第二个 inlet - 同样使用 fast mode
 
-GPU inlet 模式对比说明：
-1. "cpu_compatible" 模式:
-   - 与标准 CPU inlet_operator 行为一致
-   - 流量注入方式更加保守，接近 CPU 参考实现
-   - 适合需要与 CPU 结果对齐或数值稳定性优先的场景
-   
-2. "fast" 模式:
-   - GPU 优化计算方式，计算更快
-   - 数值行为可能与 CPU 略有差异
-   - 适合对速度要求高、允许小的数值差异的大规模模拟
+GPU inlet 模式说明：
+1. "fast" 模式:
+   - GPU 优化计算方式
+   - 支持正负流量交换
+   - 也是本仓库耦合实现唯一受支持的模式
 """
 domain.gpu_inlets.add_inlet(
     region2,
     Q=q2,
     label="inlet2",
-    mode="fast"  # 使用不同的计算模式
+    mode="fast"
 )
 
 """
@@ -690,7 +685,7 @@ domain2.gpu_interface.init_gpu_inlets()
 """
 region1 = anuga.Region(domain=domain2, center=INLET1_CENTER, radius=INLET1_RADIUS)
 region2 = anuga.Region(domain=domain2, center=INLET2_CENTER, radius=INLET2_RADIUS)
-domain2.gpu_inlets.add_inlet(region1, Q=q1, label="inlet1", mode="cpu_compatible")
+domain2.gpu_inlets.add_inlet(region1, Q=q1, label="inlet1", mode="fast")
 domain2.gpu_inlets.add_inlet(region2, Q=q2, label="inlet2", mode="fast")
 
 """
@@ -840,7 +835,7 @@ print(f"\n演示 2 完成：运行了 {domain2.relative_time:.1f} 秒\n")
 
 1. GPU Inlet API（最新）:
    ✓ 初始化: domain.gpu_interface.init_gpu_inlets()
-   ✓ 添加: domain.gpu_inlets.add_inlet(..., mode="cpu_compatible"|"fast")
+   ✓ 添加: domain.gpu_inlets.add_inlet(..., mode="fast")
    ✓ 应用: domain.gpu_inlets.apply() 在时间步进中
    ✓ 支持多个 inlet，各自独立的流量函数
 
@@ -859,7 +854,7 @@ print(f"\n演示 2 完成：运行了 {domain2.relative_time:.1f} 秒\n")
 
 --- GPU Inlet 的关键调用 ---
 domain.gpu_interface.init_gpu_inlets()                    # 初始化
-domain.gpu_inlets.add_inlet(region, Q=func, mode="...")   # 添加
+domain.gpu_inlets.add_inlet(region, Q=func, mode="fast")  # 添加
 domain.gpu_inlets.apply()                                 # 应用
 
 --- GPU 边界更新的关键调用 ---
