@@ -1,9 +1,13 @@
+import copy
 import datetime
 import json
 import math
 import numpy as np
 import pandas as pd
-import config as config
+try:
+    from . import config as config
+except ImportError:  # pragma: no cover - keep standalone script compatibility
+    import config as config
 from shapely.geometry import Polygon, box, LineString, Point
 from scipy.sparse import bmat
 from scipy.sparse.linalg import spsolve
@@ -2743,6 +2747,147 @@ class River(Process):
         cell_num = self.Get_nearest_cell_num(pos)
         cell_length = self.cell_lengths[cell_num]
         self.QIN[cell_num] += side_Q / cell_length
+
+    def apply_cellwise_side_inflow(self, cell_ids, side_qs):
+        cell_ids = np.asarray(cell_ids, dtype=int)
+        side_qs = np.asarray(side_qs, dtype=float)
+        if cell_ids.shape != side_qs.shape:
+            raise ValueError('cell_ids 与 side_qs 的形状必须一致')
+        for cell_id, side_q in zip(cell_ids.tolist(), side_qs.tolist()):
+            if cell_id <= 0 or cell_id > self.cell_num:
+                raise ValueError(f'侧向源项 cell_id={cell_id} 超出真实单元范围 [1, {self.cell_num}]')
+            self.QIN[cell_id] += float(side_q) / float(self.cell_lengths[cell_id])
+
+    def initialize_for_coupling(self, fine=False, save_outputs=False):
+        total_sim_time = (self.sim_end_time - self.sim_start_time).total_seconds()
+        self._coupling_total_sim_time = float(total_sim_time)
+        self._coupling_save_outputs = bool(save_outputs)
+        self._coupling_initialized = True
+
+        if fine:
+            self.Fine_cell_property2()
+        self.Init_water_serface()
+        self.Implic_flag = False
+        self.Init_cell_proprity(fine)
+        self.initial_total_volume = self._compute_total_volume()
+        self.final_total_volume = None
+        self.volume_relative_change = None
+        self._reset_step_diagnostics()
+        self._diagnostics_snapshot('init', success=True)
+        self._reset_save_scheduler()
+
+        if save_outputs:
+            self.Save_Basic_data()
+            if self.save_only_end_state:
+                self.Save_result_per_time_step()
+            else:
+                self.Save_result_per_time_step()
+                self._advance_save_scheduler()
+
+        first_dt = float(self.Caculate_CFL_time_for_river_net())
+        self.DT = min(first_dt, float(self.Max_time_step))
+        if self.DT < self.min_dt:
+            self.DT = self.min_dt
+        self.DT_old = self.DT
+        return float(self.DT)
+
+    def predict_cfl_dt(self):
+        return float(self.Caculate_CFL_time_for_river_net())
+
+    def advance_one_step(self, dt):
+        if not getattr(self, '_coupling_initialized', False):
+            raise RuntimeError('River must be initialized with initialize_for_coupling() before advance_one_step()')
+
+        total_sim_time = float(getattr(self, '_coupling_total_sim_time', (self.sim_end_time - self.sim_start_time).total_seconds()))
+        remaining = max(total_sim_time - float(self.current_sim_time), 0.0)
+        used_dt = min(float(dt), remaining)
+        if used_dt <= 0.0:
+            return 0.0
+
+        self.DT = used_dt
+        if callable(self.boundary_updater):
+            self.boundary_updater(self)
+
+        self._reset_step_diagnostics()
+        self.Caculate_face_U_C()
+        self.Caculate_Roe_matrix()
+        self.Caculate_source_term_2()
+        self.Caculate_Roe_Flux_2()
+        self.Caculate_dam()
+        self.Assemble_Flux_2()
+        self.Update_cell_proprity2()
+        self.current_sim_time += used_dt
+        self._diagnostics_snapshot('step', success=True)
+
+        if getattr(self, '_coupling_save_outputs', False) and self._should_save_current_state(total_sim_time):
+            self.Save_result_per_time_step()
+            self._advance_save_scheduler()
+
+        self.time_step_count = self.time_step_count + 1
+        self._update_cfl_dt(used_dt=used_dt, advance_time=False)
+        return float(used_dt)
+
+    def advance_to(self, target_time, time_eps=1.0e-12):
+        if not getattr(self, '_coupling_initialized', False):
+            raise RuntimeError('River must be initialized with initialize_for_coupling() before advance_to()')
+
+        target = float(target_time)
+        while self.current_sim_time + time_eps < target:
+            remaining = target - float(self.current_sim_time)
+            dt = min(float(self.predict_cfl_dt()), remaining)
+            if dt <= time_eps:
+                dt = max(remaining, 0.0)
+            used_dt = self.advance_one_step(dt)
+            if used_dt <= 0.0:
+                break
+        if abs(float(self.current_sim_time) - target) <= time_eps:
+            self.current_sim_time = target
+        return float(self.current_sim_time)
+
+    def get_total_volume(self):
+        return float(self._compute_total_volume())
+
+    def snapshot(self):
+        array_names = [
+            'water_level', 'water_depth', 'Q', 'S', 'Cell_left_Q', 'Cell_right_Q',
+            'Cell_left_S', 'Cell_right_S', 'U', 'FR', 'C', 'PRESS', 'BETA', 'P',
+            'R', 'cell_press_source', 'QIN', 'DEB', 'Slop', 'DTI', 'n', 'F_U',
+            'F_C', 'F_Q_SOURCE', 'F_Friction_SOURCE', 'F_Singular_Head_Loss',
+            'Lambda1', 'Lambda2', 'abs_Lambda1', 'abs_Lambda2', 'alpha1', 'alpha2',
+            'dissipation1', 'dissipation2', 'Vactor1', 'Vactor2', 'Vactor1_T',
+            'Vactor2_T', 'Flux_LOC', 'Flux_Source_left', 'Flux_Source_right',
+            'Flux_Source_center', 'Flux_Friction_left', 'Flux_Friction_right',
+            'bottom_source', 'friction_source', 'Flux', 'Debit_Flux',
+            'flag_LeVeque', 'S_old', 'Q_old', 'V0', 'V1', 'D', 'ID', 'A',
+            'Lambda1I', 'Lambda2I', 'Vactor1I', 'Vactor2I', 'Vactor1I_T',
+            'Vactor2I_T', '_forced_dry_recorded',
+        ]
+        scalar_names = [
+            'DT', 'DT_old', 'current_sim_time', 'time_step_count', 'current_report_time_step_remaining_time',
+            'revelent_time', 'initial_total_volume', 'final_total_volume', 'volume_relative_change',
+            'left_inflow_fallback_count', 'left_inflow_cell1_dry_to_wet_count',
+            '_prev_left_inner_is_dry', 'boundary_face_discharge_left', 'boundary_face_discharge_right',
+            'boundary_face_area_left', 'boundary_face_area_right', 'boundary_face_width_left',
+            'boundary_face_width_right', 'boundary_face_level_left', 'boundary_face_level_right',
+            'prev_Qb_left', 'prev_Qb_right', '_next_save_time',
+        ]
+        return {
+            'arrays': {name: np.array(getattr(self, name), copy=True) for name in array_names if hasattr(self, name)},
+            'scalars': {name: copy.deepcopy(getattr(self, name)) for name in scalar_names if hasattr(self, name)},
+            'diagnostics_history': copy.deepcopy(getattr(self, 'diagnostics_history', [])),
+            'boundary_diagnostics_history': copy.deepcopy(getattr(self, 'boundary_diagnostics_history', [])),
+            'last_old_state_tail': copy.deepcopy(getattr(self, 'last_old_state_tail', {})),
+        }
+
+    def restore(self, snapshot):
+        for name, value in snapshot.get('arrays', {}).items():
+            current = getattr(self, name)
+            current[...] = value
+        for name, value in snapshot.get('scalars', {}).items():
+            setattr(self, name, copy.deepcopy(value))
+        self.diagnostics_history = copy.deepcopy(snapshot.get('diagnostics_history', []))
+        self.boundary_diagnostics_history = copy.deepcopy(snapshot.get('boundary_diagnostics_history', []))
+        self.last_old_state_tail = copy.deepcopy(snapshot.get('last_old_state_tail', {}))
 
     def Evolve_impli(self, DT, fine=False):
         time = datetime.datetime.now()

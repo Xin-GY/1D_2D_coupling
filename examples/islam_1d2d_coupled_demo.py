@@ -108,7 +108,7 @@ def main() -> None:
     domain, mesh = build_two_d_domain(mesh_path)
 
     one_d = OneDNetworkAdapter(network)
-    two_d = TwoDAnugaGpuAdapter(domain, multiprocessor_mode=1)
+    two_d = TwoDAnugaGpuAdapter(domain, multiprocessor_mode=4)
     two_d.initialize_gpu()
     two_d.register_exchange_region('lateral_demo', mesh.lateral_exchange_regions['lateral_demo'], mode='fast')
 

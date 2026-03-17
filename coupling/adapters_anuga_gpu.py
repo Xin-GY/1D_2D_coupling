@@ -105,6 +105,13 @@ class TwoDAnugaGpuAdapter:
         boundary_map = dict(getattr(self.domain, 'boundary_map', {}) or {})
         fallback = anuga.Transmissive_boundary(self.domain)
         state_holder = np.asarray(provider(0.0), dtype=float) if callable(provider) else np.asarray(provider, dtype=float)
+        self._dynamic_boundary_registry[tag] = {
+            'provider': provider if callable(provider) else None,
+            'state': np.asarray(state_holder, dtype=float),
+            'time_boundary': None,
+            'fallback': fallback,
+            'active': False,
+        }
 
         def boundary_function(t: float, _tag: str = tag) -> np.ndarray:
             registry = self._dynamic_boundary_registry[_tag]
@@ -113,13 +120,7 @@ class TwoDAnugaGpuAdapter:
             return np.asarray(registry['state'], dtype=float)
 
         time_boundary = anuga.Time_boundary(self.domain, function=boundary_function)
-        self._dynamic_boundary_registry[tag] = {
-            'provider': provider if callable(provider) else None,
-            'state': np.asarray(state_holder, dtype=float),
-            'time_boundary': time_boundary,
-            'fallback': fallback,
-            'active': False,
-        }
+        self._dynamic_boundary_registry[tag]['time_boundary'] = time_boundary
         boundary_map[tag] = fallback
         self.domain.set_boundary(boundary_map)
         self.domain.gpu_interface.init_gpu_boundary_conditions()
@@ -328,10 +329,22 @@ class TwoDAnugaGpuAdapter:
     def restore(self, snapshot: dict[str, Any]) -> None:
         self._ensure_initialized()
         gpu = self.domain.gpu_interface
-        gpu.gpu_stage_centroid_values[...] = snapshot['stage']
-        gpu.gpu_xmom_centroid_values[...] = snapshot['xmomentum']
-        gpu.gpu_ymom_centroid_values[...] = snapshot['ymomentum']
-        gpu.gpu_height_centroid_values[...] = snapshot['height']
+        try:
+            import cupy as cp  # type: ignore
+
+            gpu.gpu_stage_centroid_values[...] = cp.asarray(snapshot['stage'])
+            gpu.gpu_xmom_centroid_values[...] = cp.asarray(snapshot['xmomentum'])
+            gpu.gpu_ymom_centroid_values[...] = cp.asarray(snapshot['ymomentum'])
+            gpu.gpu_height_centroid_values[...] = cp.asarray(snapshot['height'])
+        except Exception:
+            gpu.gpu_stage_centroid_values[...] = snapshot['stage']
+            gpu.gpu_xmom_centroid_values[...] = snapshot['xmomentum']
+            gpu.gpu_ymom_centroid_values[...] = snapshot['ymomentum']
+            gpu.gpu_height_centroid_values[...] = snapshot['height']
+        self.domain.quantities['stage'].centroid_values[:] = snapshot['stage']
+        self.domain.quantities['xmomentum'].centroid_values[:] = snapshot['xmomentum']
+        self.domain.quantities['ymomentum'].centroid_values[:] = snapshot['ymomentum']
+        self.domain.quantities['height'].centroid_values[:] = snapshot['height']
         self.domain.relative_time = float(snapshot['relative_time'])
         self.domain.timestep = float(snapshot['timestep'])
         gpu.set_gpu_update_timestep(self.domain.timestep)

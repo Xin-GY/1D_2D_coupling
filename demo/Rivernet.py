@@ -1,9 +1,13 @@
 import random
 import time
 import os
+import copy
 from copy import deepcopy
 
-from river_for_net import River
+try:
+    from .river_for_net import River
+except ImportError:  # pragma: no cover - keep standalone script compatibility
+    from river_for_net import River
 # from river_for_net_optimized import River
 import networkx as nx
 from pprint import pprint
@@ -270,6 +274,12 @@ class Rivernet():
             else:
                 print(f'河道 {data["name"]} 没有名为 {function_name} 的函数')
 
+    def get_river(self, name):
+        for _, _, data in self.G.edges(data=True):
+            if data.get('name') == name:
+                return data['river']
+        raise KeyError(f'河道 {name!r} 不存在')
+
     # 设置边界条件
     def set_boundary(self, node: str, btype: str, data=None):
         """
@@ -457,6 +467,16 @@ class Rivernet():
         # 更新每条河道的时间步长
         for u, v, data in self.G.edges(data=True):
             data['river'].set_next_dt(dt)
+
+    def _sync_river_runtime(self, sim_time=None, dt=None):
+        if sim_time is None:
+            sim_time = self.current_sim_time
+        if dt is None:
+            dt = self.DT
+        for _, _, data in self.G.edges(data=True):
+            river = data['river']
+            river.current_sim_time = float(sim_time)
+            river.DT = float(dt)
 
     # 更新边界条件
     def Update_boundary_conditions(self):
@@ -1155,6 +1175,129 @@ class Rivernet():
         minutes, seconds = divmod(rem, 60)  # 再拆分钟
         total_time_use = time.time() - self.caculation_start_time  # 总耗时
         print(f'当前模拟时间:{days}天{hours}小时{minutes}分钟{seconds}秒，模拟子步数量:{self.sub_step_count}，当前步计算耗时:{self.sub_step_caculation_time_using:.2f}秒，时间步长范围:[{self.sub_step_min_dt:.2f} - {self.sub_step_max_dt:.2f}]秒，总耗时:{total_time_use:.2f}秒')
+
+    def initialize_for_coupling(self, save_outputs=False):
+        if self.Fine_flag:
+            self.Fine_cell_property_net()
+        self.Init_water_surface_net()
+        for _, _, data in self.G.edges(data=True):
+            data['river'].Implic_flag = bool(self.use_implicit_branch_update)
+        self.Init_cell_property_net()
+        self.save_outputs = bool(save_outputs)
+        if self.save_outputs:
+            self.Save_basic_data_net()
+        self.Caculate_global_CFL()
+        self.DT = float(self.cfl_allowed_dt)
+        self._coupling_initialized = True
+        self._sync_river_runtime(sim_time=self.current_sim_time, dt=self.DT)
+        return float(self.DT)
+
+    def predict_cfl_dt(self):
+        self.Caculate_global_CFL()
+        return float(self.cfl_allowed_dt)
+
+    def advance_one_step(self, dt):
+        if not getattr(self, '_coupling_initialized', False):
+            raise RuntimeError('Rivernet must be initialized with initialize_for_coupling() before advance_one_step()')
+
+        remaining = max(float(self.total_sim_time) - float(self.current_sim_time), 0.0)
+        used_dt = min(float(dt), remaining)
+        if used_dt <= 0.0:
+            return 0.0
+
+        start_time = float(self.current_sim_time)
+        end_time = start_time + used_dt
+        self.DT = used_dt
+
+        self.step_count += 1
+        self.sub_step_time += used_dt
+        self.sub_step_count += 1
+        self.sub_step_max_dt = max(self.sub_step_max_dt, used_dt)
+        self.sub_step_min_dt = min(self.sub_step_min_dt, used_dt)
+        self.current_sim_time = end_time
+        self._sync_river_runtime(sim_time=end_time, dt=used_dt)
+
+        self.Update_boundary_conditions()
+        self.Caculate_face_U_C_net()
+        self.Caculate_Roe_matrix_net()
+        self.Caculate_Source_term_net()
+        self.Caculate_Roe_flux_net()
+        if self.use_implicit_branch_update:
+            self.Caculate_impli_trans_coefficient_net()
+            self.Assemble_flux_impli_net()
+        else:
+            self.Assemble_flux_net()
+        self.Update_cell_property_net()
+
+        if self.save_outputs:
+            self.Save_step_result_net()
+
+        self.Caculate_global_CFL()
+        next_dt = min(float(self.cfl_allowed_dt), max(float(self.total_sim_time) - float(self.current_sim_time), 0.0))
+        if next_dt > 0.0:
+            self.DT = next_dt
+        self._sync_river_runtime(sim_time=self.current_sim_time, dt=self.DT)
+        return float(used_dt)
+
+    def advance_to(self, target_time, mode=None, time_eps=1.0e-12):
+        if not getattr(self, '_coupling_initialized', False):
+            raise RuntimeError('Rivernet must be initialized with initialize_for_coupling() before advance_to()')
+
+        target = float(target_time)
+        while self.current_sim_time + time_eps < target:
+            remaining = target - float(self.current_sim_time)
+            dt = min(float(self.predict_cfl_dt()), remaining)
+            if dt <= time_eps:
+                dt = max(remaining, 0.0)
+            used_dt = self.advance_one_step(dt)
+            if used_dt <= 0.0:
+                break
+        if abs(float(self.current_sim_time) - target) <= time_eps:
+            self.current_sim_time = target
+            self._sync_river_runtime(sim_time=target, dt=self.DT)
+        return float(self.current_sim_time)
+
+    def get_total_volume(self):
+        total = 0.0
+        for _, _, data in self.G.edges(data=True):
+            total += float(data['river'].get_total_volume())
+        return float(total)
+
+    def snapshot(self):
+        scalar_names = [
+            'current_sim_time', 'cfl_allowed_dt', 'DT', 'step_count', 'sub_step_count',
+            'sub_step_time', 'sub_step_max_dt', 'sub_step_min_dt', 'save_outputs',
+            'external_bc_use_stabilizers', 'internal_bc_use_stabilizers',
+            'external_bc_respect_supercritical', 'internal_bc_respect_supercritical',
+            'external_bc_stage_on_face', 'internal_bc_stage_on_face',
+        ]
+        boundary_values = {}
+        for node, item in self.boundaries.items():
+            if '_val' in item:
+                boundary_values[node] = float(item['_val'][0])
+        river_states = {}
+        for _, _, data in self.G.edges(data=True):
+            river_states[data['name']] = data['river'].snapshot()
+        return {
+            'scalars': {name: copy.deepcopy(getattr(self, name)) for name in scalar_names if hasattr(self, name)},
+            'boundary_values': boundary_values,
+            'river_states': river_states,
+            'internal_node_level_cache': copy.deepcopy(getattr(self, '_internal_node_level_cache', {})),
+            'internal_node_history': copy.deepcopy(getattr(self, 'internal_node_history', [])),
+        }
+
+    def restore(self, snapshot):
+        for name, value in snapshot.get('scalars', {}).items():
+            setattr(self, name, copy.deepcopy(value))
+        for node, value in snapshot.get('boundary_values', {}).items():
+            item = self.boundaries.get(node)
+            if item and '_val' in item:
+                item['_val'][0] = float(value)
+        for name, river_state in snapshot.get('river_states', {}).items():
+            self.get_river(name).restore(river_state)
+        self._internal_node_level_cache = copy.deepcopy(snapshot.get('internal_node_level_cache', {}))
+        self.internal_node_history = copy.deepcopy(snapshot.get('internal_node_history', []))
+        self._sync_river_runtime(sim_time=self.current_sim_time, dt=self.DT)
 
     # 演进子步
     def _evolve_base(self, yield_step):
