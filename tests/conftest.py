@@ -70,3 +70,36 @@ def chapter_analysis_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path
         str(output_root),
     )
     return output_root
+
+
+@pytest.fixture(scope='session')
+def fastest_exact_smoke_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    output_root = tmp_path_factory.mktemp('fastest_exact_smoke') / 'chapter_coupling_analysis_fastest_exact_smoke'
+    cases = [
+        'frontal_basin_fill_strict_global_min_dt',
+        'lateral_overtopping_return_strict_global_min_dt',
+        'regime_switch_backwater_or_mixed_strict_global_min_dt',
+    ]
+    for case_name in cases:
+        subprocess.run(
+            [
+                sys.executable,
+                '-u',
+                '-m',
+                'experiments.run_single_case',
+                case_name,
+                '--registry',
+                'chapter',
+                '--profile',
+                'test',
+                '--output-root',
+                str(output_root),
+                '--one-d-backend',
+                'fastest_exact',
+                '--mesh-variant',
+                'refined_figures',
+            ],
+            check=True,
+            cwd=REPO_ROOT,
+        )
+    return output_root

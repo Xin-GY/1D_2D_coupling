@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 from pathlib import Path
 
 from coupling.runtime_env import repair_anuga_editable_build_env
@@ -45,15 +46,26 @@ def main() -> None:
     parser.add_argument('--registry', default='legacy', choices=['legacy', 'chapter'])
     parser.add_argument('--profile', default='paper', choices=['paper', 'test'])
     parser.add_argument('--chapter-provenance')
+    parser.add_argument('--one-d-backend')
+    parser.add_argument('--mesh-variant')
     args = parser.parse_args()
 
     output_root = ensure_dir(Path(args.output_root))
     if args.registry == 'legacy':
         case = _find_case(args.case_name)
+        if args.one_d_backend is not None:
+            case = replace(case, one_d_backend=args.one_d_backend)
         run_case(case, output_root, prepare_case, reference=None)
         return
     provenance = _chapter_provenance(args.chapter_provenance, output_root)
     case = _find_chapter_case(args.case_name, args.profile, provenance)
+    overrides = {}
+    if args.one_d_backend is not None:
+        overrides['one_d_backend'] = args.one_d_backend
+    if args.mesh_variant is not None:
+        overrides['mesh_variant'] = args.mesh_variant
+    if overrides:
+        case = replace(case, **overrides)
     run_chapter_case(case, output_root, prepare_chapter_case, reference=None)
 
 

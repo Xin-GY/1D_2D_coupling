@@ -15,8 +15,8 @@ from coupling.links import FrontalBoundaryLink, LateralWeirLink
 from coupling.manager import CouplingManager
 from coupling.mesh_builder import RiverAwareMeshBuilder
 from coupling.runtime_env import configure_runtime_environment, repair_anuga_editable_build_env
-from demo.Rivernet import Rivernet
 from experiments.io import ensure_dir
+from experiments.one_d_backends import DEFAULT_ONE_D_BACKEND, create_oned_network
 from experiments.test7_data import Test7DataProvenance
 
 
@@ -72,6 +72,8 @@ class ChapterExperimentCase:
     runtime_profile: str = 'paper'
     one_d_yields: list[float] = field(default_factory=list)
     two_d_yields: list[float] = field(default_factory=list)
+    mesh_variant: str = 'baseline'
+    one_d_backend: str = DEFAULT_ONE_D_BACKEND
 
     def reference_case_name(self) -> str:
         return f'{self.scenario_family}_strict_global_min_dt'
@@ -249,6 +251,17 @@ def _base_mesh_config(scale: str) -> MeshRefinementConfig:
     )
 
 
+def _apply_mesh_variant(mesh_config: MeshRefinementConfig, mesh_variant: str) -> MeshRefinementConfig:
+    if mesh_variant != 'refined_figures':
+        return mesh_config
+    mesh_config.maximum_triangle_area *= 0.5
+    mesh_config.river_refinement_area *= 0.5
+    mesh_config.levee_refinement_area *= 0.5
+    mesh_config.frontal_refinement_area *= 0.5
+    mesh_config.lateral_region_area *= 0.5
+    return mesh_config
+
+
 def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
     if case.scenario_family in {'official_test7_overtopping_only_variant', 'surrogate_test7_overtopping_only_variant'}:
         benchmark_scale = 'benchmark'
@@ -272,12 +285,14 @@ def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
         }
         frontal_boundary_tag = 'front_tag'
         direct_connection_lines = {'front_main': [[length - 70.0, center_y - 42.0], [length - 70.0, center_y + 42.0]]}
-        mesh_config = _base_mesh_config(benchmark_scale)
+        mesh_config = _apply_mesh_variant(_base_mesh_config(benchmark_scale), case.mesh_variant)
         if not paper:
             mesh_config.maximum_triangle_area = 1200.0
             mesh_config.river_refinement_area = 420.0
             mesh_config.frontal_refinement_area = 180.0
             mesh_config.lateral_region_area = 180.0
+            if case.mesh_variant == 'refined_figures':
+                mesh_config = _apply_mesh_variant(mesh_config, case.mesh_variant)
 
         one_d_probes = [
             OneDProbeDef('upstream_1d', 'mainstem', _cell_index_from_fraction(cell_num, 0.20)),
@@ -383,7 +398,7 @@ def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
             'levee_lines': [],
             'lateral_lines': {},
             'direct_connection_lines': {'front_main': [[length - 8.0, center_y - 10.0], [length - 8.0, center_y + 10.0]]},
-            'mesh_config': _base_mesh_config('small'),
+            'mesh_config': _apply_mesh_variant(_base_mesh_config('small'), case.mesh_variant),
             'partition_defs': {'basin': _rectangle(length * 0.55, 0.0, length, height)},
             'one_d_probes': [
                 OneDProbeDef('upstream_1d', 'mainstem', _cell_index_from_fraction(cell_num, 0.20)),
@@ -433,7 +448,7 @@ def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
             'levee_lines': [[[length * 0.28, center_y + 10.0], [length * 0.52, center_y + 10.0]]],
             'lateral_lines': {'return_link': [[length * 0.32, center_y + 12.0], [length * 0.48, center_y + 12.0]]},
             'direct_connection_lines': {},
-            'mesh_config': _base_mesh_config('small'),
+            'mesh_config': _apply_mesh_variant(_base_mesh_config('small'), case.mesh_variant),
             'partition_defs': {'storage_plain': _rectangle(length * 0.25, center_y + 8.0, length * 0.75, height)},
             'one_d_probes': [
                 OneDProbeDef('upstream_1d', 'mainstem', _cell_index_from_fraction(cell_num, 0.24)),
@@ -479,7 +494,7 @@ def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
             'levee_lines': [[[length * 0.18, center_y + 10.0], [length * 0.46, center_y + 10.0]]],
             'lateral_lines': {'early_link': [[length * 0.22, center_y + 10.0], [length * 0.40, center_y + 10.0]]},
             'direct_connection_lines': {'front_main': [[length - 10.0, center_y - 10.0], [length - 10.0, center_y + 10.0]]},
-            'mesh_config': _base_mesh_config('small'),
+            'mesh_config': _apply_mesh_variant(_base_mesh_config('small'), case.mesh_variant),
             'partition_defs': {'arrival_plain': _rectangle(length * 0.18, center_y + 6.0, length * 0.92, height)},
             'one_d_probes': [
                 OneDProbeDef('arrival_upstream', 'mainstem', _cell_index_from_fraction(cell_num, 0.16)),
@@ -543,7 +558,7 @@ def _scenario_spec(case: ChapterExperimentCase) -> dict[str, Any]:
             'mixed_return_link': [[length * 0.62, center_y - 16.0], [length * 0.74, center_y - 16.0]],
         },
         'direct_connection_lines': {'front_main': [[length - 12.0, center_y - 14.0], [length - 12.0, center_y + 14.0]]},
-        'mesh_config': _base_mesh_config('small'),
+        'mesh_config': _apply_mesh_variant(_base_mesh_config('small'), case.mesh_variant),
         'partition_defs': {
             'upper_backwater_plain': _rectangle(length * 0.20, center_y + 10.0, length * 0.62, height),
             'lower_return_plain': _rectangle(length * 0.56, 0.0, length * 0.88, center_y - 8.0),
@@ -687,10 +702,14 @@ def prepare_chapter_case(case: ChapterExperimentCase, output_dir: Path) -> dict[
         bed_drop=spec['bed_drop'],
         section_width=spec['section_width'],
     )
-    network = Rivernet(topology, model_data, verbos=False)
     initial_1d_stage, initial_2d_stage = _initial_levels(case)
-    for _, _, data in network.G.edges(data=True):
-        data['river'].Set_init_water_level(initial_1d_stage)
+    network = create_oned_network(
+        case.one_d_backend,
+        topology,
+        model_data,
+        initial_stage=initial_1d_stage,
+        verbos=False,
+    )
     network.set_boundary('n1', 'flow', _flow_boundary(case))
     network.set_boundary('n2', 'fix_level', _downstream_stage_boundary(case))
 

@@ -8,3 +8,10 @@ artifacts/*
 *.log
 *.msh
 .vscode/
+build/
+*.so
+*.pyd
+fastest_exact_handoff/**/build/
+fastest_exact_handoff/**/*.so
+fastest_exact_handoff/**/*.c
+fastest_exact_handoff/**/cython_*.cpp

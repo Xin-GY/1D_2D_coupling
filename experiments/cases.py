@@ -13,8 +13,8 @@ from coupling.links import FrontalBoundaryLink, LateralWeirLink
 from coupling.manager import CouplingManager
 from coupling.mesh_builder import RiverAwareMeshBuilder
 from coupling.runtime_env import configure_runtime_environment, repair_anuga_editable_build_env
-from demo.Rivernet import Rivernet
 from experiments.io import ensure_dir
+from experiments.one_d_backends import DEFAULT_ONE_D_BACKEND, create_oned_network
 
 
 repair_anuga_editable_build_env()
@@ -39,6 +39,7 @@ class ExperimentCase:
     two_d_yields: list[float] | None = None
     analysis_group: str = 'main'
     mesh_variant: str = 'baseline'
+    one_d_backend: str = DEFAULT_ONE_D_BACKEND
 
     def to_config_payload(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -282,10 +283,14 @@ def _make_domain(mesh_path: Path, case: ExperimentCase, initial_2d_stage: float)
 def prepare_case(case: ExperimentCase, output_dir: Path) -> dict[str, Any]:
     output_dir = ensure_dir(Path(output_dir))
     topology, model_data = _make_topology(str(output_dir), case.duration)
-    network = Rivernet(topology, model_data, verbos=False)
     initial_1d_stage, initial_2d_stage = _initial_levels(case)
-    for _, _, data in network.G.edges(data=True):
-        data['river'].Set_init_water_level(initial_1d_stage)
+    network = create_oned_network(
+        case.one_d_backend,
+        topology,
+        model_data,
+        initial_stage=initial_1d_stage,
+        verbos=False,
+    )
 
     network.set_boundary('n1', 'flow', _flow_boundary(case))
     network.set_boundary('n2', 'fix_level', _downstream_stage_boundary(case))
