@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+import json
+
 from coupling.runtime_env import configure_runtime_environment
 
 
@@ -33,8 +35,37 @@ def load_mesh_summary_rows(root: Path) -> list[dict[str, str]]:
     return load_csv_rows(root / 'summary_table_mesh.csv')
 
 
+def load_chapter_summary_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summaries' / 'summary_table.csv')
+
+
+def load_chapter_small_summary_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summaries' / 'summary_table_small_cases.csv')
+
+
+def load_chapter_partition_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summaries' / 'summary_table_test7_partitions.csv')
+
+
+def load_chapter_timing_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summaries' / 'timing_breakdown.csv')
+
+
+def load_json_payload(path: Path) -> Any:
+    with path.open('r', encoding='utf-8') as handle:
+        return json.load(handle)
+
+
 def case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
     return load_csv_rows(root / case_name / filename)
+
+
+def chapter_case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'cases' / case_name / filename)
+
+
+def chapter_case_json(root: Path, case_name: str, filename: str) -> Any:
+    return load_json_payload(root / 'cases' / case_name / filename)
 
 
 def ensure_plot_dir(root: Path) -> Path:
@@ -73,6 +104,15 @@ def interval_label(case_name: str) -> str:
 
 def fixed_interval_rows(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
     rows = [row for row in summary_rows if 'fixed_interval_' in row['case_name'] and row['case_name'].startswith('mixed_bidirectional_pulse_')]
+    return sorted(rows, key=lambda row: interval_seconds(row['case_name']))
+
+
+def chapter_fixed_interval_rows(summary_rows: list[dict[str, str]], scenario_family: str) -> list[dict[str, str]]:
+    rows = [
+        row
+        for row in summary_rows
+        if row['scenario_family'] == scenario_family and 'fixed_interval_' in row['case_name']
+    ]
     return sorted(rows, key=lambda row: interval_seconds(row['case_name']))
 
 
