@@ -31,3 +31,40 @@ def test_timing_breakdown_contains_expected_cases_and_columns(coupling_sweep_art
         assert wall_clock >= 0.0
         assert subtotal >= 0.0
         assert abs(subtotal - wall_clock) < 5.0e-3
+
+
+def test_chapter_timing_breakdown_contains_expected_columns(chapter_analysis_artifacts):
+    rows = read_csv(chapter_analysis_artifacts / 'summaries' / 'timing_breakdown.csv')
+    assert rows
+    required_columns = {
+        'case_name',
+        'scenario_family',
+        'wall_clock_seconds',
+        'one_d_advance_time',
+        'two_d_gpu_kernel_time',
+        'boundary_update_time',
+        'exchange_manager_time',
+        'misc_io_time',
+        'one_d_share',
+        'two_d_share',
+        'boundary_share',
+        'exchange_manager_share',
+        'misc_io_share',
+    }
+    for row in rows:
+        assert required_columns.issubset(row.keys())
+        wall_clock = float(row['wall_clock_seconds'])
+        subtotal = (
+            float(row['one_d_advance_time'])
+            + float(row['two_d_gpu_kernel_time'])
+            + float(row['boundary_update_time'])
+            + float(row['exchange_manager_time'])
+            + float(row['misc_io_time'])
+        )
+        assert wall_clock >= 0.0
+        assert subtotal >= 0.0
+        assert abs(subtotal - wall_clock) < 5.0e-3
+
+    benchmark_rows = [row for row in rows if 'test7' in row['scenario_family']]
+    assert any(row['scheduler_mode'] == 'strict_global_min_dt' for row in read_csv(chapter_analysis_artifacts / 'summaries' / 'summary_table.csv') if 'test7' in row['scenario_family'])
+    assert benchmark_rows

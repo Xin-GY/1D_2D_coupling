@@ -58,3 +58,30 @@ def test_fixed_interval_sweep_outputs_are_complete(coupling_sweep_artifacts):
     coarse_300_rows = read_csv(coupling_sweep_artifacts / 'mixed_bidirectional_pulse_fixed_interval_300s' / 'stage_timeseries_1d.csv')
     assert len(coarse_60_rows) > 3
     assert len(coarse_300_rows) > 2
+
+
+def test_chapter_test7_interval_outputs_are_complete(chapter_analysis_artifacts):
+    summary_rows = read_csv(chapter_analysis_artifacts / 'summaries' / 'summary_table.csv')
+    benchmark_family = next(row['scenario_family'] for row in summary_rows if 'test7' in row['scenario_family'])
+    interval_case_names = [
+        f'{benchmark_family}_fixed_interval_002s',
+        f'{benchmark_family}_fixed_interval_003s',
+        f'{benchmark_family}_fixed_interval_005s',
+        f'{benchmark_family}_fixed_interval_010s',
+        f'{benchmark_family}_fixed_interval_015s',
+        f'{benchmark_family}_fixed_interval_030s',
+        f'{benchmark_family}_fixed_interval_060s',
+        f'{benchmark_family}_fixed_interval_300s',
+    ]
+    for case_name in interval_case_names:
+        case_dir = chapter_analysis_artifacts / 'cases' / case_name
+        assert case_dir.is_dir(), f'missing chapter case directory: {case_name}'
+        for filename in REQUIRED_CASE_FILES:
+            assert (case_dir / filename).exists(), f'missing chapter artifact for {case_name}: {filename}'
+        assert (case_dir / 'crossing_diagnostics.csv').exists()
+
+    summary_case_names = {row['case_name'] for row in summary_rows}
+    assert set(interval_case_names).issubset(summary_case_names)
+    assert (chapter_analysis_artifacts / 'summaries' / 'summary_table_test7_partitions.csv').exists()
+    assert (chapter_analysis_artifacts / 'summaries' / 'figure_manifest.csv').exists()
+    assert (chapter_analysis_artifacts / 'summaries' / 'table_manifest.csv').exists()

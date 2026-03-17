@@ -22,6 +22,36 @@ PLOT_MODULES = {
 }
 
 
+CHAPTER_PLOT_MODULES = {
+    'scripts.plot_coupling_schematic': 'coupling_schematic.png',
+    'scripts.plot_test7_geometry_and_mesh': 'test7_geometry_and_mesh.png',
+    'scripts.plot_scheduler_timeline_schematic': 'scheduler_timeline_schematic.png',
+    'scripts.plot_stage_hydrographs_1d': 'stage_hydrographs_1d.png',
+    'scripts.plot_discharge_hydrographs_1d': 'discharge_hydrographs_1d.png',
+    'scripts.plot_xt_stage_river': 'xt_stage_river.png',
+    'scripts.plot_xt_discharge_river': 'xt_discharge_river.png',
+    'scripts.plot_exchange_q_timeseries': 'exchange_q_timeseries.png',
+    'scripts.plot_exchange_deta_timeseries': 'exchange_deta_timeseries.png',
+    'scripts.plot_exchange_volume_cumulative': 'exchange_volume_cumulative.png',
+    'scripts.plot_exchange_event_alignment': 'exchange_event_alignment.png',
+    'scripts.plot_2d_snapshots_depth': '2d_snapshots_depth.png',
+    'scripts.plot_2d_snapshots_velocity': '2d_snapshots_velocity.png',
+    'scripts.plot_2d_max_depth_map': '2d_max_depth_map.png',
+    'scripts.plot_2d_arrival_time_map': '2d_arrival_time_map.png',
+    'scripts.plot_2d_difference_map': '2d_difference_map.png',
+    'scripts.plot_flood_front_overlay': 'flood_front_overlay.png',
+    'scripts.plot_rmse_vs_interval': 'rmse_vs_interval.png',
+    'scripts.plot_peak_error_vs_interval': 'peak_error_vs_interval.png',
+    'scripts.plot_arrival_time_error_vs_interval': 'arrival_time_error_vs_interval.png',
+    'scripts.plot_phase_lag_vs_interval': 'phase_lag_vs_interval.png',
+    'scripts.plot_interval_normalized_axes': 'interval_normalized_axes.png',
+    'scripts.plot_cost_share_stacked': 'cost_share_stacked.png',
+    'scripts.plot_relative_cost_vs_accuracy': 'relative_cost_vs_accuracy.png',
+    'scripts.plot_floodplain_partition_compare': 'floodplain_partition_compare.png',
+    'scripts.plot_summary_dashboard': 'summary_dashboard.png',
+}
+
+
 def test_plot_scripts_generate_nonempty_pngs(coupling_sweep_artifacts):
     plot_dir = coupling_sweep_artifacts / 'plots'
     for module_name, png_name in PLOT_MODULES.items():
@@ -30,3 +60,18 @@ def test_plot_scripts_generate_nonempty_pngs(coupling_sweep_artifacts):
         png_path = plot_dir / png_name
         assert png_path.exists(), f'{module_name} did not create {png_name}'
         assert png_path.stat().st_size > 0, f'{png_name} is empty'
+
+
+def test_chapter_plot_scripts_generate_nonempty_pngs(chapter_analysis_artifacts):
+    plot_dir = chapter_analysis_artifacts / 'plots'
+    for module_name, png_name in CHAPTER_PLOT_MODULES.items():
+        module = importlib.import_module(module_name)
+        module.main(chapter_analysis_artifacts)
+        png_path = plot_dir / png_name
+        assert png_path.exists(), f'{module_name} did not create {png_name}'
+        assert png_path.stat().st_size > 0, f'{png_name} is empty'
+
+    figure_manifest = chapter_analysis_artifacts / 'summaries' / 'figure_manifest.csv'
+    table_manifest = chapter_analysis_artifacts / 'summaries' / 'table_manifest.csv'
+    assert figure_manifest.exists()
+    assert table_manifest.exists()
