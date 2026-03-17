@@ -1,0 +1,15 @@
+{
+  "case_variant": "surrogate_test7_overtopping_only_variant",
+  "source_mode": "surrogate",
+  "source_page_url": "https://www.gov.uk/government/publications/benchmarking-the-latest-generation-of-2d-hydraulic-flood-modelling-packages",
+  "technical_report_url": null,
+  "model_zip_url": null,
+  "local_report_path": null,
+  "local_zip_path": null,
+  "download_attempted": false,
+  "download_succeeded": false,
+  "fallback_reason": "official_data_not_found_and_download_disabled",
+  "notes": [
+    "未找到官方缓存，且下载被禁用，转入 documented surrogate。"
+  ]
+}

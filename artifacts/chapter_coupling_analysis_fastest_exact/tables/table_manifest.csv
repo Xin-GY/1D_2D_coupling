@@ -1,0 +1,7 @@
+table_id,source_csv_or_json,key_columns,caption_draft_cn,caption_draft_en,chapter_section
+Table-CTD-01,summaries/summary_table.csv,"case_name,scenario_family,scheduler_mode,exchange_interval,stage_rmse,arrival_time_error,phase_lag,relative_cost_ratio",chapter 分析总汇总表。,Master summary table for the chapter coupling analysis.,9
+Table-CTD-02,summaries/summary_table_mesh.csv,"case_name,triangle_count,RMSE_stage_vs_reference,wall_clock_seconds",mesh sensitivity 汇总表。,Summary table for mesh-sensitivity runs.,9
+Table-CTD-03,summaries/summary_table_test7_partitions.csv,"case_name,partition,max_depth_map_difference,arrival_time_map_difference,wet_area_iou",Test 7 Floodplain 分区结果汇总表。,Partition summary table for the Test 7 benchmark floodplains.,9
+Table-CTD-04,summaries/summary_table_small_cases.csv,"case_name,scenario_family,stage_rmse,arrival_time_error,phase_lag,hydrograph_NSE",小型机理算例结果汇总表。,Summary table for the small mechanism cases.,9
+Table-CTD-05,summaries/timing_breakdown.csv,"case_name,one_d_share,two_d_share,boundary_share,exchange_manager_share,misc_io_share",不同策略的成本占比分解表。,Cost-share breakdown table across coupling strategies.,9
+Table-CTD-06,summaries/exchange_link_summary.csv,"case_name,link_id,peak_Q_exchange,cumulative_exchange_volume,sign_flip_count,link_mass_closure_error",接口级 exchange link 诊断汇总表。,Interface-level diagnostic summary for the exchange links.,9

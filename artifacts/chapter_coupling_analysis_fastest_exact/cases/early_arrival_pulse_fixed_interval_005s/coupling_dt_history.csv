@@ -1,0 +1,9 @@
+time,dt_exchange,mode
+5.0,5.0,fixed_interval
+10.0,5.0,fixed_interval
+15.0,5.0,fixed_interval
+20.0,5.0,fixed_interval
+25.0,5.0,fixed_interval
+30.0,5.0,fixed_interval
+35.0,5.0,fixed_interval
+40.0,5.0,fixed_interval

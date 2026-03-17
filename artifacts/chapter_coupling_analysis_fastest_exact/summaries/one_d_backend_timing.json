@@ -1,0 +1,30 @@
+[
+  {
+    "backend": "legacy",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "base_case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt_legacy_1donly",
+    "duration": 120.0,
+    "mesh_variant": "refined_figures",
+    "initial_cfl_dt": 0.10499999672174454,
+    "final_time": 120.0,
+    "step_count": 68,
+    "wall_clock_seconds": 0.16620494902599603,
+    "total_volume_final": 17991.775390625,
+    "relative_to_legacy": 1.0
+  },
+  {
+    "backend": "fastest_exact",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "base_case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt_fastest_exact_1donly",
+    "duration": 120.0,
+    "mesh_variant": "refined_figures",
+    "initial_cfl_dt": 0.10499999672174454,
+    "final_time": 120.0,
+    "step_count": 68,
+    "wall_clock_seconds": 0.13608299801126122,
+    "total_volume_final": 18015.32421875,
+    "relative_to_legacy": 0.8187662209142554
+  }
+]

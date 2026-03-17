@@ -1,0 +1,60 @@
+{
+  "case_name": "frontal_basin_fill_strict_global_min_dt",
+  "scenario_family": "frontal_basin_fill",
+  "scheduler_mode": "strict_global_min_dt",
+  "exchange_interval": null,
+  "coupling_type": "frontal_only",
+  "direction": "river_to_floodplain",
+  "waveform": "basin_fill",
+  "duration": 80.0,
+  "reference_policy": "strict_global_min_dt",
+  "partition_defs": {
+    "basin": [
+      [
+        60.50000000000001,
+        0.0
+      ],
+      [
+        110.0,
+        0.0
+      ],
+      [
+        110.0,
+        48.0
+      ],
+      [
+        60.50000000000001,
+        48.0
+      ]
+    ]
+  },
+  "probe_defs": {
+    "primary_stage_probe": "mainstem_mid",
+    "primary_discharge_probe": "mainstem_right_q"
+  },
+  "link_probe_ids": [
+    "front_main"
+  ],
+  "analysis_raster": {
+    "mode": "centroids"
+  },
+  "case_variant": "mechanism",
+  "data_provenance": {
+    "mode": "synthetic_mechanism"
+  },
+  "runtime_profile": "test",
+  "one_d_yields": [
+    14.399999999999999,
+    33.6,
+    52.800000000000004,
+    70.4
+  ],
+  "two_d_yields": [
+    19.2,
+    40.0,
+    59.2
+  ],
+  "mesh_variant": "refined_figures",
+  "one_d_backend": "fastest_exact",
+  "reference_case_name": "frontal_basin_fill_strict_global_min_dt"
+}

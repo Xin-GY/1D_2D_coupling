@@ -1,0 +1,3 @@
+time,dt_exchange,mode
+60.0,60.0,fixed_interval
+120.0,60.0,fixed_interval

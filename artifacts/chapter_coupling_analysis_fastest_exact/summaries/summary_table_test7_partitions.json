@@ -1,0 +1,502 @@
+[
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_yield_schedule",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.019351439262228487,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_yield_schedule",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.04674567355035719,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_yield_schedule",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.026852141456961298,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_002s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.0008979241294533313,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_002s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.0004158623109575821,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_002s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.0020420227066597074,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_003s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.000730841310026209,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_003s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.0007098915546730478,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_003s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.003417160515199358,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_005s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.001254606007937531,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_005s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.0012496677768551456,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_005s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.005658816569911018,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_010s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.0019507168045079792,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_010s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.0180709640789552,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_010s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.012675083592005365,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_015s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.007204403528146719,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_015s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.03249603651886307,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_015s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.018121698791575158,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_030s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.05966864488410095,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_030s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.05795887079648088,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_030s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.03681030310541622,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_060s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.037628169791667276,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_060s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.07605563065705909,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_060s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.05385808247826723,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_300s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_1",
+    "max_depth_map_difference": 0.04976450844780647,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_300s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_2",
+    "max_depth_map_difference": 0.10007543677613104,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_300s",
+    "scenario_family": "surrogate_test7_overtopping_only_variant",
+    "partition": "Floodplain_3",
+    "max_depth_map_difference": 0.19181115429786033,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "frontal_basin_fill_strict_global_min_dt",
+    "scenario_family": "frontal_basin_fill",
+    "partition": "basin",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "frontal_basin_fill_strict_global_min_dt",
+    "scenario_family": "frontal_basin_fill",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_015s",
+    "scenario_family": "frontal_basin_fill",
+    "partition": "basin",
+    "max_depth_map_difference": 0.038623912408928596,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_015s",
+    "scenario_family": "frontal_basin_fill",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.08337466567601726,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "lateral_overtopping_return_strict_global_min_dt",
+    "scenario_family": "lateral_overtopping_return",
+    "partition": "storage_plain",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "lateral_overtopping_return_strict_global_min_dt",
+    "scenario_family": "lateral_overtopping_return",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_015s",
+    "scenario_family": "lateral_overtopping_return",
+    "partition": "storage_plain",
+    "max_depth_map_difference": 0.007145345480609078,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_015s",
+    "scenario_family": "lateral_overtopping_return",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.007818589182625901,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "early_arrival_pulse_strict_global_min_dt",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "arrival_plain",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "early_arrival_pulse_strict_global_min_dt",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_005s",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "arrival_plain",
+    "max_depth_map_difference": 0.01700829742090504,
+    "arrival_time_map_difference": 1.2867869822549505,
+    "inundated_area_difference": 118.18185379126493,
+    "wet_area_iou": 0.7970147982988477,
+    "wet_area_csi": 0.7970147982988477
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_005s",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.3325578175704494,
+    "arrival_time_map_difference": 0.8165440878456494,
+    "inundated_area_difference": 739.4920817950278,
+    "wet_area_iou": 0.6953299418674688,
+    "wet_area_csi": 0.6953299418674688
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_015s",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "arrival_plain",
+    "max_depth_map_difference": 0.08243837302033596,
+    "arrival_time_map_difference": 5.077511419942667,
+    "inundated_area_difference": 492.3254213680752,
+    "wet_area_iou": 0.48521051952696476,
+    "wet_area_csi": 0.48521051952696476
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_015s",
+    "scenario_family": "early_arrival_pulse",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.9887197230078684,
+    "arrival_time_map_difference": 6.28049599863072,
+    "inundated_area_difference": 1112.6657360120794,
+    "wet_area_iou": 0.6026709666537674,
+    "wet_area_csi": 0.6026709666537674
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_strict_global_min_dt",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "lower_return_plain",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_strict_global_min_dt",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_strict_global_min_dt",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "upper_backwater_plain",
+    "max_depth_map_difference": 0.0,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_015s",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "lower_return_plain",
+    "max_depth_map_difference": 0.0028378799800081733,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_015s",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "unpartitioned",
+    "max_depth_map_difference": 0.010872389833961327,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_015s",
+    "scenario_family": "regime_switch_backwater_or_mixed",
+    "partition": "upper_backwater_plain",
+    "max_depth_map_difference": 0.0075214958947324995,
+    "arrival_time_map_difference": 0.0,
+    "inundated_area_difference": 0.0,
+    "wet_area_iou": 1.0,
+    "wet_area_csi": 1.0
+  }
+]
