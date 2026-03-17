@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import time
 from typing import Any
 
 import numpy as np
@@ -19,6 +20,14 @@ class TwoDAnugaGpuAdapter:
     _exchange_q: dict[str, float] = field(default_factory=dict)
     _exchange_regions: dict[str, Any] = field(default_factory=dict)
     _dynamic_boundary_registry: dict[str, dict[str, Any]] = field(default_factory=dict)
+    diagnostic_callbacks: list[Any] = field(default_factory=list)
+    timing_stats: dict[str, float] = field(
+        default_factory=lambda: {
+            'boundary_update_time': 0.0,
+            'kernel_time': 0.0,
+            'gpu_inlets_apply_time': 0.0,
+        }
+    )
 
     def _has_gpu_inlet_manager(self) -> bool:
         gpu_inlets = getattr(self.domain, 'gpu_inlets', None)
@@ -73,6 +82,7 @@ class TwoDAnugaGpuAdapter:
 
     def initialize_gpu(self) -> None:
         configure_runtime_environment()
+        self.reset_timing_stats()
         if int(self.multiprocessor_mode) != 4:
             raise ValueError(f'TwoDAnugaGpuAdapter requires multiprocessor_mode=4 for the real GPU path, got {self.multiprocessor_mode}')
         if hasattr(self.domain, 'set_multiprocessor_mode'):
@@ -93,6 +103,21 @@ class TwoDAnugaGpuAdapter:
             transfer_gpu_results=False,
         )
         self._initialized = True
+
+    def register_diagnostic_callback(self, callback: Any) -> None:
+        self.diagnostic_callbacks.append(callback)
+
+    def reset_timing_stats(self) -> None:
+        self.timing_stats = {
+            'boundary_update_time': 0.0,
+            'kernel_time': 0.0,
+            'gpu_inlets_apply_time': 0.0,
+        }
+
+    def _notify_diagnostic_callbacks(self) -> None:
+        current_time = float(self.domain.relative_time)
+        for callback in self.diagnostic_callbacks:
+            callback(self, current_time)
 
     def _ensure_initialized(self) -> None:
         if not self._initialized:
@@ -165,6 +190,7 @@ class TwoDAnugaGpuAdapter:
     def refresh_boundary_values(self) -> None:
         self._ensure_initialized()
         gpu = self.domain.gpu_interface
+        started = time.perf_counter()
         gpu.protect_against_infinitesimal_and_negative_heights_kernal(
             transfer_gpu_results=False,
             transfer_from_cpu=False,
@@ -174,11 +200,13 @@ class TwoDAnugaGpuAdapter:
             transfer_from_cpu=False,
         )
         gpu.update_boundary_values_gpu()
+        self.timing_stats['boundary_update_time'] += time.perf_counter() - started
 
     def _prepare_gpu_step(self) -> float:
         self._ensure_initialized()
         gpu = self.domain.gpu_interface
         self.refresh_boundary_values()
+        started = time.perf_counter()
         dt = gpu.compute_fluxes_ext_central_kernel(
             self.domain.evolve_max_timestep,
             transfer_from_cpu=False,
@@ -190,6 +218,7 @@ class TwoDAnugaGpuAdapter:
             transfer_gpu_results=False,
             transfer_from_cpu=False,
         )
+        self.timing_stats['kernel_time'] += time.perf_counter() - started
         self._prepared_dt = dt_value
         return dt_value
 
@@ -204,18 +233,26 @@ class TwoDAnugaGpuAdapter:
         self.domain.timestep = remaining_dt
         self.domain.gpu_interface.set_gpu_update_timestep(self.domain.timestep)
         self.domain.relative_time += remaining_dt
+        kernel_started = time.perf_counter()
         self.domain.gpu_interface.compute_forcing_terms_manning_friction_flat(
             transfer_from_cpu=False,
             transfer_gpu_results=False,
         )
+        self.timing_stats['kernel_time'] += time.perf_counter() - kernel_started
         if not self._has_gpu_inlet_manager():
             raise RuntimeError('缺少新版 GPUInletManager；耦合交换不能退回 legacy apply_inlets_gpu 路径')
+        inlet_started = time.perf_counter()
         self.domain.gpu_inlets.apply()
+        self.timing_stats['gpu_inlets_apply_time'] += time.perf_counter() - inlet_started
+        kernel_started = time.perf_counter()
         self.domain.gpu_interface.update_conserved_quantities_kernal(
             transfer_from_cpu=False,
             transfer_gpu_results=False,
         )
+        self.timing_stats['kernel_time'] += time.perf_counter() - kernel_started
         self._prepared_dt = None
+        if remaining_dt > 0.0:
+            self._notify_diagnostic_callbacks()
         return float(remaining_dt)
 
     def advance_to(self, target_time: float, mode: str | None = None) -> float:

@@ -14,7 +14,11 @@
   - real frontal-boundary sampling
   - batch sweep artifact generation
   - independent plotting scripts
+  - arrival-time interpolation diagnostics
+  - mesh-orientation sensitivity sweep
+  - timing-breakdown output auditing
 - Batch-sweep tests share one session-scoped sweep run so the GPU cost is paid once per pytest session.
+- Scheduler smoke tests that would otherwise reuse CUDA state run each mode in a subprocess to avoid GPU state contamination inside one pytest worker.
 
 ## GPU Rules
 - `mode="fast"` is mandatory for every exchange region and GPU inlet registration.
@@ -26,4 +30,7 @@
   - `RMSE_stage_vs_reference`
   - `max_abs_stage_diff_vs_reference`
   - `arrival_time_diff_vs_reference`
+- `arrival_time_diff_vs_reference` is based on raw probe time series plus linear threshold-crossing interpolation. It never snaps to the nearest exchange time or sample bucket.
+- Comparative stage metrics are evaluated on a common `0.5 s` analysis grid built from raw internal-step probe series.
+- `phase_lag_seconds` is computed from demeaned, normalized cross-correlation on that common grid, with short-overlap edge lags rejected so the phase metric cannot saturate on one- or two-point overlaps.
 - Fixed-interval and `yield_schedule` cases are compared against the reference case with the same coupling type, direction, and waveform family.

@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from shapely.geometry import LineString, Point, Polygon
+from shapely.geometry import GeometryCollection, LineString, MultiPolygon, Point, Polygon
+from shapely.ops import unary_union
 
 from .config import MeshRefinementConfig
 
@@ -48,6 +49,50 @@ class RiverAwareMeshBuilder:
     def _buffer_line(self, coords: list[list[float]], half_width: float) -> Polygon:
         return LineString(coords).buffer(half_width, cap_style=2, join_style=2)
 
+    @classmethod
+    def _iter_polygons(cls, geom: Polygon | MultiPolygon | GeometryCollection | None) -> list[Polygon]:
+        if geom is None or geom.is_empty:
+            return []
+        if geom.geom_type == 'Polygon':
+            return [geom]
+        polygons: list[Polygon] = []
+        for part in getattr(geom, 'geoms', []):
+            if part.geom_type == 'Polygon':
+                polygons.append(part)
+            elif part.geom_type in {'MultiPolygon', 'GeometryCollection'}:
+                polygons.extend(cls._iter_polygons(part))
+        return polygons
+
+    @classmethod
+    def _normalize_interior_regions(
+        cls,
+        regions: list[tuple[list[list[float]], float]],
+    ) -> list[tuple[list[list[float]], float]]:
+        if not regions:
+            return []
+        grouped: dict[float, list[Polygon]] = {}
+        for coords, area in regions:
+            polygon = Polygon(coords)
+            if polygon.is_empty or polygon.area <= 0.0:
+                continue
+            grouped.setdefault(float(area), []).append(polygon)
+
+        normalized: list[tuple[list[list[float]], float]] = []
+        covered = None
+        for area in sorted(grouped):
+            merged = unary_union(grouped[area])
+            remaining = merged if covered is None else merged.difference(covered)
+            polygons = [
+                poly.buffer(0.0)
+                for poly in cls._iter_polygons(remaining)
+                if not poly.is_empty and poly.area > 1.0e-10
+            ]
+            if polygons:
+                normalized.extend((cls._polygon_to_coords(poly), area) for poly in polygons)
+                group_union = unary_union(polygons)
+                covered = group_union if covered is None else unary_union([covered, group_union])
+        return normalized
+
     def build(
         self,
         floodplain_polygon: list[list[float]],
@@ -86,12 +131,13 @@ class RiverAwareMeshBuilder:
             levee_poly = ls.buffer(self.config.levee_refinement_half_width, cap_style=2, join_style=2)
             result.interior_regions.append((self._polygon_to_coords(levee_poly), self.config.levee_refinement_area))
 
-        river_corridor = self._clip_polygon_inside(
-            self._buffer_line(centerline, self.config.river_refinement_half_width),
-            floodplain,
-        )
-        if river_corridor is not None:
-            result.interior_regions.append((self._polygon_to_coords(river_corridor), self.config.river_refinement_area))
+        if self.config.river_refinement_half_width > 0.0 and self.config.river_refinement_area > 0.0:
+            river_corridor = self._clip_polygon_inside(
+                self._buffer_line(centerline, self.config.river_refinement_half_width),
+                floodplain,
+            )
+            if river_corridor is not None:
+                result.interior_regions.append((self._polygon_to_coords(river_corridor), self.config.river_refinement_area))
 
         if self.config.prefer_channel_hole:
             channel_hole = self._clip_polygon_inside(
@@ -102,6 +148,8 @@ class RiverAwareMeshBuilder:
                 result.interior_holes.append(self._polygon_to_coords(channel_hole))
 
         for link_id, line in lateral_links.items():
+            if self.config.lateral_region_half_width <= 0.0 or self.config.lateral_region_area <= 0.0:
+                continue
             region_poly = self._clip_polygon_inside(self._buffer_line(line, self.config.lateral_region_half_width), floodplain)
             result.breaklines.append(self._line_to_coords(LineString(line)))
             if region_poly is None:
@@ -113,18 +161,21 @@ class RiverAwareMeshBuilder:
         for link_id, line in direct_connection_lines.items():
             ls = LineString(line)
             result.breaklines.append(self._line_to_coords(ls))
-            frontal_poly = self._clip_polygon_inside(
-                ls.buffer(self.config.frontal_refinement_half_width, cap_style=2, join_style=2),
-                floodplain,
-            )
-            if frontal_poly is not None:
-                result.interior_regions.append(
-                    (
-                        self._polygon_to_coords(frontal_poly),
-                        self.config.frontal_refinement_area,
-                    )
+            if self.config.frontal_refinement_half_width > 0.0 and self.config.frontal_refinement_area > 0.0:
+                frontal_poly = self._clip_polygon_inside(
+                    ls.buffer(self.config.frontal_refinement_half_width, cap_style=2, join_style=2),
+                    floodplain,
                 )
+                if frontal_poly is not None:
+                    result.interior_regions.append(
+                        (
+                            self._polygon_to_coords(frontal_poly),
+                            self.config.frontal_refinement_area,
+                        )
+                    )
             result.frontal_boundary_tags[link_id] = f'{link_id}_boundary'
+
+        result.interior_regions = self._normalize_interior_regions(result.interior_regions)
 
         for polygon, area in result.interior_regions:
             centroid = Polygon(polygon).representative_point()

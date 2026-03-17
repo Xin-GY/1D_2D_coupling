@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import ensure_plot_dir, fixed_interval_rows, load_summary_rows, save_figure
+from scripts._plot_common import ensure_plot_dir, fixed_interval_rows, interval_label, load_summary_rows, save_figure
 
 import matplotlib.pyplot as plt
 
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 def main(root: Path | str = Path('artifacts') / 'coupling_sweep') -> None:
     root = Path(root)
     rows = fixed_interval_rows(load_summary_rows(root))
-    labels = [row['case_name'].split('fixed_interval_')[1] for row in rows]
+    labels = [interval_label(row['case_name']) for row in rows]
     values = [float(row['RMSE_stage_vs_reference']) for row in rows]
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.bar(labels, values, color='#4e79a7')

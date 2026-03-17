@@ -26,16 +26,31 @@
 - `coupling_exchange_history.csv`: per-link `eta_1d`, `eta_2d`, `Q_exchange`, `dV_exchange`, `cumulative_dV`, `mode`, `iteration_count`.
 - `coupling_dt_history.csv`: exchange time and interval history.
 - `coupling_mass_balance.csv`: 1D, 2D, and system volume summaries over time.
-- Sweep artifacts also write `config.json`, `exchange_history.csv`, `mass_balance.csv`, `stage_timeseries_1d.csv`, `stage_timeseries_2d.csv`, `discharge_timeseries.csv`, and `summary_metrics.json` for each case.
+- Sweep artifacts also write `config.json`, `exchange_history.csv`, `mass_balance.csv`, `stage_timeseries_1d.csv`, `stage_timeseries_2d.csv`, `discharge_timeseries.csv`, `crossing_diagnostics.csv`, and `summary_metrics.json` for each case.
+- Selected large-interval cases (`15s`, `30s`, `60s`, `300s`) additionally write `stage_diff_vs_reference.csv` on the common `0.5 s` analysis grid for auditability.
+- Root-level sweep outputs include `summary_table.csv/json`, `summary_table_mesh.csv/json`, and `timing_breakdown.csv`.
 
 ## Testing And Reference Strategy
 - `strict_global_min_dt` is treated as the reference solution for interval and scheduler comparisons.
 - Default `pytest tests` coverage is no-skip: there is no `skip`, `skipif`, `importorskip`, or `xfail` escape hatch in the active coupling test suite.
 - GPU-facing regression tests run against the real ANUGA GPU path in the target conda environment; adapter-only regressions additionally assert that the coupling code never falls back to legacy inlet APIs.
 - The experiment sweep is executed through per-case subprocess isolation to prevent cross-case CUDA state contamination when many ANUGA GPU domains are created in one batch.
+- Real-GPU scheduler smoke tests also use subprocess isolation because repeated direct GPU domain creation inside a single pytest worker can corrupt CUDA state after failures.
+
+## Audit Metrics
+- Arrival time is measured on the raw internal-step `mainstem_mid` probe series by linear threshold-crossing interpolation. The threshold is the reference-case 50% rise level, reused for both reference and candidate.
+- `RMSE_stage_vs_reference` and `max_abs_stage_diff_vs_reference` are computed on a common `0.5 s` analysis grid obtained by linearly interpolating each raw stage series.
+- `phase_lag_seconds` uses demeaned, normalized cross-correlation on the same grid, with a minimum-overlap guard to prevent edge-only correlations from masquerading as physical phase shifts.
+- `peak_stage_error` and `peak_time_error` are taken from the same `mainstem_mid` analysis signal, while `hydrograph_NSE` compares the total exchange hydrograph against the reference.
+- `cumulative_mass_error` is the time integral of `|system_mass_error|`, and `normalized_mass_error` divides that integral by `initial_system_volume * simulated_duration`.
+
+## Mesh Sensitivity
+- The mesh sweep uses the same mixed bidirectional pulse forcing and strict scheduler for all six mesh variants.
+- `aligned/rotated` cases audit orientation sensitivity; `fine/coarse` audit bulk resolution; `narrow/wide corridor` audit river-aware corridor width sensitivity.
+- The rotated variants intentionally keep the rotated centerline breakline but disable the rotated river-corridor polygonal refinement band, because that specific `breakline + corridor polygon` combination triggers a low-level `meshpy` failure after rotation. Lateral and frontal refinement polygons remain active, so the rotated cases still exercise breaklines plus interior regions through the production path.
 
 ## Known Limits
 - `demo/Islam.py` remains untouched and is not used as the runnable coupled entrypoint because this repository does not include its external forcing assets.
 - GPU negative-`Q` sink support is assumed and exercised directly through the new `GPUInlet` path; the regression tests are there to catch accidental regressions back to legacy inlet APIs.
 - The current mesh builder is intentionally “river-aware” rather than a full GIS preprocessing system.
-- The automated sweep uses a deliberately small self-contained river-aware geometry so the real-GPU experiment matrix stays practical in CI and local test runs. It preserves centerline/lateral/direct geometry relationships, but it does not yet turn every breakline/refinement polygon into the production sweep mesh.
+- The automated sweep uses a deliberately small self-contained river-aware geometry so the real-GPU experiment matrix stays practical in CI and local test runs. It preserves centerline/lateral/direct geometry relationships, but it is still an audit harness rather than a production GIS preprocessing chain.

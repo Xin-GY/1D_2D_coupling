@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+import time
 from typing import Any
 
 import numpy as np
@@ -12,12 +13,26 @@ class OneDNetworkAdapter:
     network: Any
     time_eps: float = 1.0e-12
     _pending_lateral_sources: dict[str, dict[str, dict[int, float]]] = field(default_factory=dict)
+    diagnostic_callbacks: list[Any] = field(default_factory=list)
+    timing_stats: dict[str, float] = field(default_factory=lambda: {'advance_time': 0.0})
 
     def initialize(self, save_outputs: bool = False) -> float:
+        self.reset_timing_stats()
         return float(self.network.initialize_for_coupling(save_outputs=save_outputs))
 
     def predict_cfl_dt(self) -> float:
         return float(self.network.predict_cfl_dt())
+
+    def register_diagnostic_callback(self, callback: Any) -> None:
+        self.diagnostic_callbacks.append(callback)
+
+    def reset_timing_stats(self) -> None:
+        self.timing_stats = {'advance_time': 0.0}
+
+    def _notify_diagnostic_callbacks(self) -> None:
+        current_time = float(self.network.current_sim_time)
+        for callback in self.diagnostic_callbacks:
+            callback(self, current_time)
 
     def _set_constant_boundary(self, node: str, btype: str, value: float) -> None:
         if node not in self.network.boundaries:
@@ -73,7 +88,12 @@ class OneDNetworkAdapter:
 
     def advance_one_step(self, dt: float) -> float:
         self._materialize_lateral_sources()
-        return float(self.network.advance_one_step(dt))
+        started = time.perf_counter()
+        used_dt = float(self.network.advance_one_step(dt))
+        self.timing_stats['advance_time'] += time.perf_counter() - started
+        if used_dt > 0.0:
+            self._notify_diagnostic_callbacks()
+        return used_dt
 
     def advance_to(self, target_time: float, mode: str | None = None) -> float:
         target = float(target_time)

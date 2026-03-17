@@ -1,3 +1,7 @@
+import json
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -49,20 +53,58 @@ def test_fixed_interval_next_exchange_reaches_final_time():
     ],
 )
 def test_real_gpu_scheduler_modes_reach_exact_end_time(tmp_path: Path, mode: str, exchange_interval: float | None):
-    case = ExperimentCase(
-        case_name=f'test_{mode}',
-        scheduler_mode=mode,
-        exchange_interval=exchange_interval,
-        coupling_type='mixed',
-        direction='bidirectional',
-        waveform='pulse',
-        duration=6.0,
-        one_d_yields=[2.0, 4.0, 6.0],
-        two_d_yields=[3.0, 6.0],
+    output_path = tmp_path / f'scheduler_{mode}.json'
+    script = textwrap.dedent(
+        """
+        import json
+        import sys
+        from pathlib import Path
+
+        from experiments.cases import ExperimentCase, prepare_case
+
+        mode = sys.argv[1]
+        interval_arg = sys.argv[2]
+        output_path = Path(sys.argv[3])
+        exchange_interval = None if interval_arg == 'None' else float(interval_arg)
+        case = ExperimentCase(
+            case_name=f'test_{mode}',
+            scheduler_mode=mode,
+            exchange_interval=exchange_interval,
+            coupling_type='mixed',
+            direction='bidirectional',
+            waveform='pulse',
+            duration=6.0,
+            one_d_yields=[2.0, 4.0, 6.0],
+            two_d_yields=[3.0, 6.0],
+        )
+        prepared = prepare_case(case, output_path.parent / case.case_name)
+        manager = prepared['manager']
+        manager.run()
+        output_path.write_text(
+            json.dumps(
+                {
+                    'one_d_time': manager.one_d.network.current_sim_time,
+                    'two_d_time': manager.two_d.domain.relative_time,
+                    'dt_history_count': len(manager.dt_history),
+                }
+            ),
+            encoding='utf-8',
+        )
+        """
     )
-    prepared = prepare_case(case, tmp_path / case.case_name)
-    manager = prepared['manager']
-    manager.run()
-    assert abs(manager.one_d.network.current_sim_time - case.duration) < 1.0e-9
-    assert abs(manager.two_d.domain.relative_time - case.duration) < 1.0e-9
-    assert manager.dt_history
+    subprocess.run(
+        [
+            sys.executable,
+            '-c',
+            script,
+            mode,
+            'None' if exchange_interval is None else str(exchange_interval),
+            str(output_path),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    payload = json.loads(output_path.read_text(encoding='utf-8'))
+    assert abs(float(payload['one_d_time']) - 6.0) < 1.0e-9
+    assert abs(float(payload['two_d_time']) - 6.0) < 1.0e-9
+    assert int(payload['dt_history_count']) > 0

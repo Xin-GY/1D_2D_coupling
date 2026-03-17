@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
+import time
 from typing import Any
 
 from .adapters_anuga_gpu import TwoDAnugaGpuAdapter
@@ -28,6 +29,7 @@ class CouplingManager:
     initial_system_volume: float = 0.0
     cumulative_exchange_volume: float = 0.0
     exchange_observers: list[Any] = field(default_factory=list)
+    timing_stats: dict[str, float] = field(default_factory=lambda: {'frontal_boundary_update_time': 0.0})
     _initialized: bool = False
 
     def __post_init__(self) -> None:
@@ -106,6 +108,7 @@ class CouplingManager:
         return guesses
 
     def _apply_frontal_guesses(self, guesses: dict[str, dict[str, Any]]) -> None:
+        started = time.perf_counter()
         for link in self.frontal_links:
             guess = guesses[link.link_id]
             link.current_stage = float(guess['stage'])
@@ -127,6 +130,7 @@ class CouplingManager:
             else:
                 self.one_d.apply_stage_bc(link.river_boundary_node, guess['stage'])
                 self.two_d.activate_dynamic_boundary(link.two_d_boundary_tag, False)
+        self.timing_stats['frontal_boundary_update_time'] += time.perf_counter() - started
 
     def exchange_all_links(self, current_time: float, dt_exchange: float, mode: str) -> dict[str, dict[str, Any]]:
         self._apply_lateral_exchange(current_time, dt_exchange, mode)
@@ -251,6 +255,27 @@ class CouplingManager:
         self._write_csv(out_dir / 'coupling_exchange_history.csv', self.exchange_history)
         self._write_csv(out_dir / 'coupling_dt_history.csv', self.dt_history)
         self._write_csv(out_dir / 'coupling_mass_balance.csv', self.mass_balance_rows)
+
+    def get_timing_breakdown(self, wall_clock_seconds: float) -> dict[str, float]:
+        one_d_advance_time = float(getattr(self.one_d, 'timing_stats', {}).get('advance_time', 0.0))
+        boundary_update_time = float(getattr(self.two_d, 'timing_stats', {}).get('boundary_update_time', 0.0))
+        boundary_update_time += float(self.timing_stats.get('frontal_boundary_update_time', 0.0))
+        two_d_gpu_kernel_time = float(getattr(self.two_d, 'timing_stats', {}).get('kernel_time', 0.0))
+        gpu_inlets_apply_time = float(getattr(self.two_d, 'timing_stats', {}).get('gpu_inlets_apply_time', 0.0))
+        scheduler_manager_overhead = float(
+            max(
+                float(wall_clock_seconds)
+                - (one_d_advance_time + boundary_update_time + two_d_gpu_kernel_time + gpu_inlets_apply_time),
+                0.0,
+            )
+        )
+        return {
+            'one_d_advance_time': one_d_advance_time,
+            'two_d_gpu_kernel_time': two_d_gpu_kernel_time,
+            'boundary_update_time': boundary_update_time,
+            'gpu_inlets_apply_time': gpu_inlets_apply_time,
+            'scheduler_manager_overhead': scheduler_manager_overhead,
+        }
 
     @staticmethod
     def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:

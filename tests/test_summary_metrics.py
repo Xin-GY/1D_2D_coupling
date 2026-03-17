@@ -11,12 +11,19 @@ REQUIRED_METRIC_KEYS = {
     'cumulative_exchange_volume',
     'final_total_mass_error',
     'max_abs_mass_error',
+    'cumulative_mass_error',
+    'normalized_mass_error',
     'peak_stage_1d',
     'peak_stage_2d',
     'peak_Q_exchange',
+    'triangle_count',
     'RMSE_stage_vs_reference',
     'max_abs_stage_diff_vs_reference',
     'arrival_time_diff_vs_reference',
+    'phase_lag_seconds',
+    'peak_stage_error',
+    'peak_time_error',
+    'hydrograph_NSE',
 }
 
 
@@ -33,3 +40,6 @@ def test_summary_tables_include_required_metrics(coupling_sweep_artifacts):
     assert float(strict_row['RMSE_stage_vs_reference']) == 0.0
     assert float(strict_row['max_abs_stage_diff_vs_reference']) == 0.0
     assert float(strict_row['arrival_time_diff_vs_reference']) == 0.0
+    assert float(strict_row['phase_lag_seconds']) == 0.0
+    assert float(strict_row['peak_stage_error']) == 0.0
+    assert float(strict_row['peak_time_error']) == 0.0

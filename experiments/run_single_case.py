@@ -3,13 +3,13 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from experiments.cases import generate_case_matrix, prepare_case
+from experiments.cases import generate_all_cases, prepare_case
 from experiments.io import ensure_dir
 from experiments.runner import run_case
 
 
 def _find_case(case_name: str):
-    for case in generate_case_matrix():
+    for case in generate_all_cases():
         if case.case_name == case_name:
             return case
     raise KeyError(f'Unknown experiment case: {case_name}')

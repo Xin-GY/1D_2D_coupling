@@ -35,10 +35,15 @@ class ExperimentCase:
     duration: float = 120.0
     one_d_yields: list[float] | None = None
     two_d_yields: list[float] | None = None
+    analysis_group: str = 'main'
+    mesh_variant: str = 'baseline'
 
     def to_config_payload(self) -> dict[str, Any]:
         payload = asdict(self)
-        payload['reference_case_name'] = f'{self.coupling_type}_{self.direction}_{self.waveform}_strict_global_min_dt'
+        if self.analysis_group == 'mesh_sensitivity':
+            payload['reference_case_name'] = 'aligned_mesh_fine'
+        else:
+            payload['reference_case_name'] = f'{self.coupling_type}_{self.direction}_{self.waveform}_strict_global_min_dt'
         return payload
 
 
@@ -93,6 +98,109 @@ def _initial_levels(case: ExperimentCase) -> tuple[float, float]:
     return 0.78, 0.82
 
 
+def _fixed_interval_label(interval: float) -> str:
+    interval_f = float(interval)
+    if float(interval_f).is_integer():
+        return f'fixed_interval_{int(interval_f):03d}s'
+    whole = int(interval_f)
+    frac = str(interval_f).split('.')[1].rstrip('0')
+    return f'fixed_interval_{whole:03d}p{frac}s'
+
+
+def _rotate_points(points: list[list[float]], degrees: float, origin: tuple[float, float] = (10.0, 10.0)) -> list[list[float]]:
+    if abs(float(degrees)) <= 1.0e-12:
+        return [[float(x), float(y)] for x, y in points]
+    ox, oy = origin
+    theta = math.radians(float(degrees))
+    cos_t = math.cos(theta)
+    sin_t = math.sin(theta)
+    rotated: list[list[float]] = []
+    for x, y in points:
+        dx = float(x) - ox
+        dy = float(y) - oy
+        rotated.append(
+            [
+                ox + dx * cos_t - dy * sin_t,
+                oy + dx * sin_t + dy * cos_t,
+            ]
+        )
+    return rotated
+
+
+def _mesh_variant_spec(mesh_variant: str) -> dict[str, Any]:
+    rotation = 0.0
+    config = MeshRefinementConfig(
+        maximum_triangle_area=4.0,
+        channel_exclusion_half_width=1.0,
+        river_refinement_half_width=2.0,
+        river_refinement_area=2.0,
+        frontal_refinement_half_width=1.5,
+        frontal_refinement_area=1.5,
+        lateral_region_half_width=1.5,
+        lateral_region_area=1.5,
+        prefer_channel_hole=False,
+    )
+    use_mesh_features = False
+
+    if mesh_variant == 'aligned_mesh_fine':
+        config.maximum_triangle_area = 2.0
+        config.river_refinement_area = 0.8
+        config.frontal_refinement_area = 0.8
+        config.lateral_region_area = 0.8
+        use_mesh_features = True
+    elif mesh_variant == 'aligned_mesh_coarse':
+        config.maximum_triangle_area = 6.0
+        config.river_refinement_area = 3.0
+        config.frontal_refinement_area = 3.0
+        config.lateral_region_area = 3.0
+        use_mesh_features = True
+    elif mesh_variant == 'rotated_mesh_fine':
+        rotation = 30.0
+        config.maximum_triangle_area = 2.0
+        config.river_refinement_half_width = 0.0
+        config.river_refinement_area = 0.8
+        config.frontal_refinement_area = 0.8
+        config.lateral_region_area = 0.8
+        use_mesh_features = True
+    elif mesh_variant == 'rotated_mesh_coarse':
+        rotation = 30.0
+        config.maximum_triangle_area = 6.0
+        config.river_refinement_half_width = 0.0
+        config.river_refinement_area = 3.0
+        config.frontal_refinement_area = 3.0
+        config.lateral_region_area = 3.0
+        use_mesh_features = True
+    elif mesh_variant == 'narrow_corridor_refine':
+        config.maximum_triangle_area = 3.0
+        config.river_refinement_half_width = 1.0
+        config.river_refinement_area = 0.8
+        config.lateral_region_half_width = 0.9
+        config.lateral_region_area = 0.8
+        config.frontal_refinement_half_width = 1.0
+        config.frontal_refinement_area = 0.8
+        use_mesh_features = True
+    elif mesh_variant == 'wide_corridor_refine':
+        config.maximum_triangle_area = 3.0
+        config.river_refinement_half_width = 3.0
+        config.river_refinement_area = 0.8
+        config.lateral_region_half_width = 2.8
+        config.lateral_region_area = 0.8
+        config.frontal_refinement_half_width = 2.6
+        config.frontal_refinement_area = 0.8
+        use_mesh_features = True
+
+    centerline = _rotate_points([[4.0, 10.0], [16.0, 10.0]], rotation)
+    direct_line = _rotate_points([[16.0, 8.0], [16.0, 12.0]], rotation)
+    lateral_line = _rotate_points([[9.0, 12.0], [11.0, 12.0]], rotation)
+    return {
+        'config': config,
+        'use_mesh_features': use_mesh_features,
+        'centerline': centerline,
+        'direct_connection_lines': {'front': direct_line},
+        'lateral_links': {'lateral_demo': lateral_line},
+    }
+
+
 def _make_topology(output_path: str, duration: float) -> tuple[dict[tuple[str, str], dict[str, Any]], dict[str, Any]]:
     model_data = {
         'model_name': 'coupling_sweep',
@@ -129,34 +237,30 @@ def _make_topology(output_path: str, duration: float) -> tuple[dict[tuple[str, s
 
 
 def _make_domain(mesh_path: Path, case: ExperimentCase, initial_2d_stage: float):
-    builder = RiverAwareMeshBuilder(
-        MeshRefinementConfig(
-            maximum_triangle_area=4.0,
-            channel_exclusion_half_width=1.0,
-            river_refinement_half_width=2.0,
-            river_refinement_area=2.0,
-            frontal_refinement_half_width=1.5,
-            frontal_refinement_area=1.5,
-            lateral_region_half_width=1.5,
-            lateral_region_area=1.5,
-            prefer_channel_hole=False,
-        )
-    )
+    mesh_variant = _mesh_variant_spec(case.mesh_variant)
+    builder = RiverAwareMeshBuilder(mesh_variant['config'])
     mesh = builder.build(
         floodplain_polygon=[[0.0, 0.0], [20.0, 0.0], [20.0, 20.0], [0.0, 20.0]],
-        centerline=[[2.0, 10.0], [18.0, 10.0]],
-        direct_connection_lines={'front': [[18.0, 8.0], [18.0, 12.0]]},
-        lateral_links={'lateral_demo': [[8.0, 12.0], [12.0, 12.0]]},
+        centerline=mesh_variant['centerline'],
+        direct_connection_lines=mesh_variant['direct_connection_lines'],
+        lateral_links=mesh_variant['lateral_links'],
     )
     boundary_tags = {'bottom': [0], 'front_tag': [1], 'top': [2], 'left': [3]}
+    domain_kwargs: dict[str, Any] = {
+        'boundary_tags': boundary_tags,
+        'maximum_triangle_area': float(mesh_variant['config'].maximum_triangle_area),
+        'mesh_filename': str(mesh_path),
+        'minimum_triangle_angle': 28.0,
+        'use_cache': not bool(mesh_variant['use_mesh_features']),
+        'verbose': False,
+    }
+    if mesh_variant['use_mesh_features']:
+        domain_kwargs['interior_regions'] = mesh.interior_regions
+        domain_kwargs['interior_holes'] = mesh.interior_holes
+        domain_kwargs['breaklines'] = mesh.breaklines
     domain = anuga.create_domain_from_regions(
         mesh.bounding_polygon,
-        boundary_tags=boundary_tags,
-        maximum_triangle_area=4.0,
-        mesh_filename=str(mesh_path),
-        minimum_triangle_angle=28.0,
-        use_cache=True,
-        verbose=False,
+        **domain_kwargs,
     )
     domain.set_name(case.case_name)
     domain.set_minimum_storable_height(0.001)
@@ -259,17 +363,22 @@ def generate_case_matrix() -> list[ExperimentCase]:
     scheduler_cases = [
         ('strict_global_min_dt', None),
         ('yield_schedule', None),
+        ('fixed_interval', 0.5),
         ('fixed_interval', 1.0),
+        ('fixed_interval', 2.0),
         ('fixed_interval', 3.0),
         ('fixed_interval', 5.0),
+        ('fixed_interval', 7.5),
         ('fixed_interval', 10.0),
         ('fixed_interval', 15.0),
+        ('fixed_interval', 20.0),
         ('fixed_interval', 30.0),
         ('fixed_interval', 60.0),
+        ('fixed_interval', 120.0),
         ('fixed_interval', 300.0),
     ]
     for mode, interval in scheduler_cases:
-        name = mode if interval is None else f'fixed_interval_{int(interval):03d}s'
+        name = mode if interval is None else _fixed_interval_label(float(interval))
         cases.append(
             ExperimentCase(
                 case_name=f'{base_type}_{base_direction}_{base_waveform}_{name}',
@@ -326,3 +435,31 @@ def generate_case_matrix() -> list[ExperimentCase]:
         seen.add(case.case_name)
         unique_cases.append(case)
     return unique_cases
+
+
+def generate_mesh_sensitivity_cases() -> list[ExperimentCase]:
+    mesh_variants = [
+        'aligned_mesh_fine',
+        'aligned_mesh_coarse',
+        'rotated_mesh_fine',
+        'rotated_mesh_coarse',
+        'narrow_corridor_refine',
+        'wide_corridor_refine',
+    ]
+    return [
+        ExperimentCase(
+            case_name=mesh_variant,
+            scheduler_mode='strict_global_min_dt',
+            exchange_interval=None,
+            coupling_type='mixed',
+            direction='bidirectional',
+            waveform='pulse',
+            analysis_group='mesh_sensitivity',
+            mesh_variant=mesh_variant,
+        )
+        for mesh_variant in mesh_variants
+    ]
+
+
+def generate_all_cases() -> list[ExperimentCase]:
+    return generate_case_matrix() + generate_mesh_sensitivity_cases()

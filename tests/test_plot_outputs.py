@@ -11,8 +11,13 @@ PLOT_MODULES = {
     'scripts.plot_rmse_vs_interval': 'rmse_vs_interval.png',
     'scripts.plot_peak_stage_error_vs_interval': 'peak_stage_error_vs_interval.png',
     'scripts.plot_arrival_time_error_vs_interval': 'arrival_time_error_vs_interval.png',
+    'scripts.plot_phase_lag_vs_interval': 'phase_lag_vs_interval.png',
     'scripts.plot_runtime_vs_interval': 'runtime_vs_interval.png',
     'scripts.plot_coupling_type_compare': 'coupling_type_compare.png',
+    'scripts.plot_mesh_sensitivity_stage': 'mesh_sensitivity_stage.png',
+    'scripts.plot_mesh_sensitivity_mass': 'mesh_sensitivity_mass.png',
+    'scripts.plot_mesh_sensitivity_runtime': 'mesh_sensitivity_runtime.png',
+    'scripts.plot_timing_breakdown': 'timing_breakdown.png',
     'scripts.plot_summary_dashboard': 'summary_dashboard.png',
 }
 

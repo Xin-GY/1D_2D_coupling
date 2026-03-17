@@ -16,13 +16,18 @@ REQUIRED_CASE_FILES = [
 
 def test_fixed_interval_sweep_outputs_are_complete(coupling_sweep_artifacts):
     interval_case_names = [
+        'mixed_bidirectional_pulse_fixed_interval_000p5s',
         'mixed_bidirectional_pulse_fixed_interval_001s',
+        'mixed_bidirectional_pulse_fixed_interval_002s',
         'mixed_bidirectional_pulse_fixed_interval_003s',
         'mixed_bidirectional_pulse_fixed_interval_005s',
+        'mixed_bidirectional_pulse_fixed_interval_007p5s',
         'mixed_bidirectional_pulse_fixed_interval_010s',
         'mixed_bidirectional_pulse_fixed_interval_015s',
+        'mixed_bidirectional_pulse_fixed_interval_020s',
         'mixed_bidirectional_pulse_fixed_interval_030s',
         'mixed_bidirectional_pulse_fixed_interval_060s',
+        'mixed_bidirectional_pulse_fixed_interval_120s',
         'mixed_bidirectional_pulse_fixed_interval_300s',
     ]
     for case_name in interval_case_names:
@@ -39,3 +44,17 @@ def test_fixed_interval_sweep_outputs_are_complete(coupling_sweep_artifacts):
         assert case_name in summary_case_names
     assert isinstance(summary_json, list)
     assert len(summary_json) == len(summary_rows)
+
+    for case_name in (
+        'mixed_bidirectional_pulse_fixed_interval_015s',
+        'mixed_bidirectional_pulse_fixed_interval_030s',
+        'mixed_bidirectional_pulse_fixed_interval_060s',
+        'mixed_bidirectional_pulse_fixed_interval_300s',
+    ):
+        assert (coupling_sweep_artifacts / case_name / 'stage_diff_vs_reference.csv').exists()
+        assert (coupling_sweep_artifacts / case_name / 'crossing_diagnostics.csv').exists()
+
+    coarse_60_rows = read_csv(coupling_sweep_artifacts / 'mixed_bidirectional_pulse_fixed_interval_060s' / 'stage_timeseries_1d.csv')
+    coarse_300_rows = read_csv(coupling_sweep_artifacts / 'mixed_bidirectional_pulse_fixed_interval_300s' / 'stage_timeseries_1d.csv')
+    assert len(coarse_60_rows) > 3
+    assert len(coarse_300_rows) > 2

@@ -11,14 +11,14 @@ def main(root: Path | str = Path('artifacts') / 'coupling_sweep') -> None:
     root = Path(root)
     rows = fixed_interval_rows(load_summary_rows(root))
     labels = [interval_label(row['case_name']) for row in rows]
-    values = [float(row['arrival_time_diff_vs_reference']) for row in rows]
+    values = [float(row['phase_lag_seconds']) for row in rows]
     fig, ax = plt.subplots(figsize=(9, 5))
-    ax.bar(labels, values, color='#e15759')
-    ax.set_title('Arrival Time Error vs Exchange Interval')
+    ax.bar(labels, values, color='#59a14f')
+    ax.set_title('Phase Lag vs Exchange Interval')
     ax.set_xlabel('Interval')
-    ax.set_ylabel('Arrival Time Difference (s)')
+    ax.set_ylabel('Phase Lag (s)')
     ax.grid(True, alpha=0.3, axis='y')
-    save_figure(fig, ensure_plot_dir(root) / 'arrival_time_error_vs_interval.png')
+    save_figure(fig, ensure_plot_dir(root) / 'phase_lag_vs_interval.png')
 
 
 if __name__ == '__main__':

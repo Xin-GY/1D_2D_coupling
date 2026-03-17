@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 from collections import defaultdict
 from pathlib import Path
+import re
 from typing import Any
 
 from coupling.runtime_env import configure_runtime_environment
@@ -28,6 +29,10 @@ def load_summary_rows(root: Path) -> list[dict[str, str]]:
     return load_csv_rows(root / 'summary_table.csv')
 
 
+def load_mesh_summary_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summary_table_mesh.csv')
+
+
 def case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
     return load_csv_rows(root / case_name / filename)
 
@@ -48,9 +53,27 @@ def scheduler_case_names(summary_rows: list[dict[str, str]]) -> list[str]:
     )
 
 
+def interval_seconds(case_name: str) -> float:
+    match = re.search(r'fixed_interval_(\d{3})(?:p(\d+))?s', case_name)
+    if not match:
+        raise ValueError(f'case name does not encode a fixed interval: {case_name}')
+    whole = int(match.group(1))
+    frac = match.group(2)
+    if frac is None:
+        return float(whole)
+    return float(f'{whole}.{frac}')
+
+
+def interval_label(case_name: str) -> str:
+    seconds = interval_seconds(case_name)
+    if abs(seconds - round(seconds)) <= 1.0e-12:
+        return f'{int(round(seconds))}s'
+    return f'{seconds:g}s'
+
+
 def fixed_interval_rows(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
     rows = [row for row in summary_rows if 'fixed_interval_' in row['case_name'] and row['case_name'].startswith('mixed_bidirectional_pulse_')]
-    return sorted(rows, key=lambda row: int(row['case_name'].split('fixed_interval_')[1].split('s')[0]))
+    return sorted(rows, key=lambda row: interval_seconds(row['case_name']))
 
 
 def series_from_rows(rows: list[dict[str, str]], x_key: str, y_key: str, filter_key: str | None = None, filter_value: str | None = None) -> tuple[list[float], list[float]]:
