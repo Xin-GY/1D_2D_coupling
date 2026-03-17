@@ -5,6 +5,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from coupling.runtime_env import repair_anuga_editable_build_env
+
+repair_anuga_editable_build_env()
+
+from experiments.chapter_suite import run_chapter_analysis
 from experiments.cases import ExperimentCase, generate_case_matrix, generate_mesh_sensitivity_cases
 from experiments.io import ensure_dir, read_csv, read_json, write_csv, write_json, write_summary_tables
 from experiments.metrics import compute_case_analysis, should_write_stage_diff
@@ -59,7 +64,7 @@ def _timing_row(case_label: str, case_name: str, case_dir: Path) -> dict[str, ob
     }
 
 
-def main(output_root: Path | None = None) -> None:
+def run_legacy_sweep(output_root: Path | None = None) -> None:
     output_root = ensure_dir(Path('artifacts') / 'coupling_sweep' if output_root is None else output_root)
     cases = generate_case_matrix()
     mesh_cases = generate_mesh_sensitivity_cases()
@@ -161,6 +166,23 @@ def main(output_root: Path | None = None) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run the full 1D-2D coupling sweep.')
-    parser.add_argument('--output-root', default=str(Path('artifacts') / 'coupling_sweep'))
+    parser.add_argument('--output-root')
+    parser.add_argument('--suite', default='chapter', choices=['legacy', 'chapter'])
+    parser.add_argument('--profile', default='paper', choices=['paper', 'test'])
+    parser.add_argument('--disable-download', action='store_true')
     args = parser.parse_args()
-    main(Path(args.output_root))
+    output_root = Path(args.output_root) if args.output_root else (
+        Path('artifacts') / 'chapter_coupling_analysis'
+        if args.suite == 'chapter'
+        else Path('artifacts') / 'coupling_sweep'
+    )
+    if args.suite == 'legacy':
+        run_legacy_sweep(output_root)
+    else:
+        run_chapter_analysis(
+            output_root=output_root,
+            profile=args.profile,
+            include_test7=True,
+            include_small=True,
+            allow_download=not bool(args.disable_download),
+        )

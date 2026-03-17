@@ -12,10 +12,12 @@ from coupling.config import CouplingConfig, FrontalLinkConfig, LateralLinkConfig
 from coupling.links import FrontalBoundaryLink, LateralWeirLink
 from coupling.manager import CouplingManager
 from coupling.mesh_builder import RiverAwareMeshBuilder
-from coupling.runtime_env import configure_runtime_environment
+from coupling.runtime_env import configure_runtime_environment, repair_anuga_editable_build_env
 from demo.Rivernet import Rivernet
+from experiments.io import ensure_dir
 
 
+repair_anuga_editable_build_env()
 configure_runtime_environment(Path('/tmp/1d_2d_coupling_experiments'))
 
 import anuga
@@ -278,6 +280,7 @@ def _make_domain(mesh_path: Path, case: ExperimentCase, initial_2d_stage: float)
 
 
 def prepare_case(case: ExperimentCase, output_dir: Path) -> dict[str, Any]:
+    output_dir = ensure_dir(Path(output_dir))
     topology, model_data = _make_topology(str(output_dir), case.duration)
     network = Rivernet(topology, model_data, verbos=False)
     initial_1d_stage, initial_2d_stage = _initial_levels(case)

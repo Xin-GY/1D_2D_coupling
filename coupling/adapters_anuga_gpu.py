@@ -1,12 +1,143 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
+from pathlib import Path
+import re
 import time
 from typing import Any
 
 import numpy as np
 
 from .runtime_env import configure_runtime_environment, require_fast_mode
+
+
+_ANUGA_GPU_COMPILE_PATCHED = False
+
+
+def _nvrtc_include_shim_dir() -> Path:
+    runtime_root = Path(os.environ.get('MPLCONFIGDIR', '/tmp/1d_2d_coupling_runtime/mplconfig')).parent
+    shim_dir = runtime_root / 'nvrtc_include' / 'gnu'
+    shim_dir.mkdir(parents=True, exist_ok=True)
+    # NVRTC on this machine can incorrectly descend into the 32-bit glibc stub
+    # branch while compiling ANUGA's CUDA kernels. An empty compatibility stub
+    # is sufficient because the generated kernels do not use those libc stub
+    # macros; we only need the header lookup to succeed.
+    for name in ('stubs-32.h', 'stubs-x32.h'):
+        target = shim_dir / name
+        if not target.exists():
+            target.write_text('/* NVRTC compatibility shim for ANUGA GPU kernels. */\n', encoding='utf-8')
+    return shim_dir.parent
+
+
+def _patch_anuga_gpu_compile() -> None:
+    global _ANUGA_GPU_COMPILE_PATCHED
+    if _ANUGA_GPU_COMPILE_PATCHED:
+        return
+
+    import cupy as cp
+    import anuga.shallow_water.sw_domain_cuda as sw_cuda
+
+    if getattr(sw_cuda.GPU_interface.compile_gpu_kernels, '_codex_patched', False):
+        _ANUGA_GPU_COMPILE_PATCHED = True
+        return
+
+    def compile_gpu_kernels(self) -> None:
+        cuda_home = os.environ.get('CUDA_HOME', '/usr/local/cuda')
+        include_dirs = [
+            str(_nvrtc_include_shim_dir()),
+            os.path.join(cuda_home, 'include'),
+            '/usr/lib/gcc/x86_64-linux-gnu/13/include',
+            '/usr/local/include',
+            '/usr/include/x86_64-linux-gnu',
+            '/usr/include',
+        ]
+        opts = [
+            '-std=c++17',
+            '-D__x86_64__=1',
+            '-D__LP64__=1',
+            '-D__linux__=1',
+            '-prec-div=true',
+            '-prec-sqrt=true',
+            '-fmad=false',
+        ] + [f'-I{d}' for d in include_dirs]
+
+        sw_dir = Path(sw_cuda.__file__).resolve().parent
+        code = (sw_dir / 'cuda_anuga.cu').read_text(encoding='utf-8')
+        green_ampt_code = (sw_dir / 'green_ampt_kernel.cu').read_text(encoding='utf-8')
+
+        code = re.sub(
+            r'unsigned\s+int64_t\s+int64_t\s+int64_t\*',
+            'unsigned long long*',
+            code,
+        )
+        code = re.sub(
+            r'unsigned\s+int64_t\s+int64_t\s+int64_t\s+old',
+            'unsigned long long old',
+            code,
+        )
+        code = code.replace(
+            'atomicAdd(&num_negative_cells, 1);',
+            'atomicAdd((unsigned long long*)&num_negative_cells, 1ULL);',
+        )
+        code = re.sub(r'^\s*#include <stdint.h>.*\n', '', code, flags=re.MULTILINE)
+        code = code + '\n\n' + green_ampt_code
+
+        self.mod = cp.RawModule(
+            code=code,
+            options=tuple(opts),
+            name_expressions=(
+                '_cuda_compute_fluxes_loop',
+                '_cuda_extrapolate_second_order_edge_sw_loop1',
+                '_cuda_extrapolate_second_order_edge_sw_loop2',
+                '_cuda_extrapolate_second_order_edge_sw_loop3',
+                '_cuda_extrapolate_second_order_edge_sw_loop4',
+                '_cuda_update_sw',
+                '_cuda_fix_negative_cells_sw',
+                '_cuda_protect_against_infinitesimal_and_negative_heights',
+                'cft_manning_friction_flat',
+                'cft_manning_friction_sloped',
+                '_cuda_update_semi_implicit1',
+                '_cuda_update_explicit',
+                '_cuda_update_semi_implicit2',
+                '_cuda_update_transmissive_boundary',
+                '_cuda_update_reflective_boundary',
+                '_cuda_inlet_fill_small',
+                '_cuda_inlet_fast_fill_preprocessed',
+                '_cuda_update_transmissive_boundary_ids',
+                '_cuda_update_reflective_boundary_ids',
+                '_cuda_update_time_boundary_ids',
+            ),
+        )
+
+        self.flux_kernel = self.mod.get_function('_cuda_compute_fluxes_loop')
+        self.extrapolate_kernel1 = self.mod.get_function('_cuda_extrapolate_second_order_edge_sw_loop1')
+        self.extrapolate_kernel2 = self.mod.get_function('_cuda_extrapolate_second_order_edge_sw_loop2')
+        self.extrapolate_kernel3 = self.mod.get_function('_cuda_extrapolate_second_order_edge_sw_loop3')
+        self.extrapolate_kernel4 = self.mod.get_function('_cuda_extrapolate_second_order_edge_sw_loop4')
+        self.update_kernal = self.mod.get_function('_cuda_update_sw')
+        self.fix_negative_cells_kernal = self.mod.get_function('_cuda_fix_negative_cells_sw')
+        self.protect_kernal = self.mod.get_function('_cuda_protect_against_infinitesimal_and_negative_heights')
+        self.manning_flat_kernal = self.mod.get_function('cft_manning_friction_flat')
+        self.manning_sloped_kernal = self.mod.get_function('cft_manning_friction_sloped')
+        self.update_semi_implicit1 = self.mod.get_function('_cuda_update_semi_implicit1')
+        self.update_explicit = self.mod.get_function('_cuda_update_explicit')
+        self.update_semi_implicit2 = self.mod.get_function('_cuda_update_semi_implicit2')
+        self.update_transmissive_boundary_kernal = self.mod.get_function('_cuda_update_transmissive_boundary')
+        self.update_reflective_boundary_kernal = self.mod.get_function('_cuda_update_reflective_boundary')
+        self.inlet_kernel = self.mod.get_function('_cuda_inlet_fill_small')
+        self.fast_inlet_kernel = self.mod.get_function('_cuda_inlet_fast_fill_preprocessed')
+        self.kern_transmissive_ids = self.mod.get_function('_cuda_update_transmissive_boundary_ids')
+        self.kern_reflective_ids = self.mod.get_function('_cuda_update_reflective_boundary_ids')
+        self.kern_time_ids = self.mod.get_function('_cuda_update_time_boundary_ids')
+        # The chapter workflows do not activate Green-Ampt infiltration. Keep
+        # the concatenated code available for ANUGA compatibility, but avoid
+        # hard-failing module compilation on this optional kernel.
+        self.green_ampt_kernel = None
+
+    compile_gpu_kernels._codex_patched = True  # type: ignore[attr-defined]
+    sw_cuda.GPU_interface.compile_gpu_kernels = compile_gpu_kernels
+    _ANUGA_GPU_COMPILE_PATCHED = True
 
 
 @dataclass(slots=True)
@@ -32,6 +163,29 @@ class TwoDAnugaGpuAdapter:
     def _has_gpu_inlet_manager(self) -> bool:
         gpu_inlets = getattr(self.domain, 'gpu_inlets', None)
         return gpu_inlets is not None and hasattr(gpu_inlets, 'add_inlet') and hasattr(gpu_inlets, 'apply')
+
+    def _ensure_green_ampt_quantities(self) -> None:
+        if not hasattr(self.domain, 'quantities') or not hasattr(self.domain, 'set_quantity'):
+            return
+        from anuga.abstract_2d_finite_volumes.quantity import Quantity
+
+        required_defaults = {
+            'green_ampt_kc': 0.0,
+            'green_ampt_ks': 0.0,
+            'green_ampt_dtheta': 0.0,
+            'green_ampt_psi': 0.0,
+            'green_ampt_zcrust': 0.0,
+            'green_ampt_imax': 0.0,
+            'green_ampt_cumulative_infiltration': 0.0,
+            'green_ampt_last_infiltration': 0.0,
+        }
+        for name, default in required_defaults.items():
+            if name not in self.domain.quantities:
+                self.domain.quantities[name] = Quantity(self.domain)
+                other_quantities = getattr(self.domain, 'other_quantities', None)
+                if isinstance(other_quantities, list) and name not in other_quantities:
+                    other_quantities.append(name)
+            self.domain.set_quantity(name, default, location='centroids')
 
     def _validate_existing_fast_mode(self) -> None:
         if not self._has_gpu_inlet_manager():
@@ -82,7 +236,9 @@ class TwoDAnugaGpuAdapter:
 
     def initialize_gpu(self) -> None:
         configure_runtime_environment()
+        _patch_anuga_gpu_compile()
         self.reset_timing_stats()
+        self._ensure_green_ampt_quantities()
         if int(self.multiprocessor_mode) != 4:
             raise ValueError(f'TwoDAnugaGpuAdapter requires multiprocessor_mode=4 for the real GPU path, got {self.multiprocessor_mode}')
         if hasattr(self.domain, 'set_multiprocessor_mode'):
