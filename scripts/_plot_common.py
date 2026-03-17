@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import csv
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 from typing import Any
+import warnings
 
 import json
 
@@ -16,7 +19,13 @@ configure_runtime_environment(Path('/tmp/1d_2d_coupling_plots'))
 import matplotlib
 
 matplotlib.use('Agg')
+from matplotlib import colors
+from matplotlib.collections import PolyCollection
 import matplotlib.pyplot as plt
+import matplotlib.tri as mtri
+import numpy as np
+from PIL import Image
+from scipy.io import netcdf_file
 
 
 def load_csv_rows(path: Path) -> list[dict[str, str]]:
@@ -56,16 +65,20 @@ def load_json_payload(path: Path) -> Any:
         return json.load(handle)
 
 
-def case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
-    return load_csv_rows(root / case_name / filename)
-
-
 def chapter_case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
-    return load_csv_rows(root / 'cases' / case_name / filename)
+    return load_csv_rows(resolve_case_dir(root, case_name) / filename)
 
 
 def chapter_case_json(root: Path, case_name: str, filename: str) -> Any:
-    return load_json_payload(root / 'cases' / case_name / filename)
+    return load_json_payload(resolve_case_dir(root, case_name) / filename)
+
+
+def case_rows(root: Path, case_name: str, filename: str) -> list[dict[str, str]]:
+    return load_csv_rows(Path(root) / case_name / filename)
+
+
+def chapter_figure_manifest_rows(root: Path) -> list[dict[str, str]]:
+    return load_csv_rows(root / 'summaries' / 'figure_manifest.csv')
 
 
 def ensure_plot_dir(root: Path) -> Path:
@@ -116,7 +129,13 @@ def chapter_fixed_interval_rows(summary_rows: list[dict[str, str]], scenario_fam
     return sorted(rows, key=lambda row: interval_seconds(row['case_name']))
 
 
-def series_from_rows(rows: list[dict[str, str]], x_key: str, y_key: str, filter_key: str | None = None, filter_value: str | None = None) -> tuple[list[float], list[float]]:
+def series_from_rows(
+    rows: list[dict[str, str]],
+    x_key: str,
+    y_key: str,
+    filter_key: str | None = None,
+    filter_value: str | None = None,
+) -> tuple[list[float], list[float]]:
     filtered = rows
     if filter_key is not None:
         filtered = [row for row in rows if row.get(filter_key) == filter_value]
@@ -134,6 +153,439 @@ def aggregate_exchange_series(rows: list[dict[str, str]]) -> tuple[list[float], 
 
 def save_figure(fig, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.tight_layout()
-    fig.savefig(path, dpi=150)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='This figure includes Axes that are not compatible with tight_layout')
+        fig.tight_layout()
+    fig.savefig(path, dpi=150, facecolor='white')
     plt.close(fig)
+
+
+def _row_count(payload: Any) -> int:
+    if hasattr(payload, 'shape'):
+        shape = getattr(payload, 'shape')
+        if shape:
+            return int(shape[0])
+    if hasattr(payload, '__len__'):
+        return int(len(payload))
+    raise TypeError(f'Unsupported tabular payload type: {type(payload)!r}')
+
+
+def assert_nonempty_dataframe(payload: Any, label: str) -> None:
+    if _row_count(payload) <= 0:
+        raise ValueError(f'{label} is empty')
+
+
+def assert_required_columns(payload: Any, required_columns: Sequence[str], label: str) -> None:
+    required = tuple(required_columns)
+    if hasattr(payload, 'columns'):
+        columns = set(str(column) for column in payload.columns)
+    else:
+        rows = list(payload)
+        assert_nonempty_dataframe(rows, label)
+        first = rows[0]
+        if not isinstance(first, Mapping):
+            raise TypeError(f'{label} does not expose mapping rows')
+        columns = set(first.keys())
+    missing = [column for column in required if column not in columns]
+    if missing:
+        raise KeyError(f'{label} is missing required columns: {missing}')
+
+
+def assert_finite_range(values: Sequence[float] | np.ndarray, label: str) -> np.ndarray:
+    array = np.asarray(values, dtype=float)
+    finite = array[np.isfinite(array)]
+    if finite.size == 0:
+        raise ValueError(f'{label} has no finite values')
+    return finite
+
+
+def resolve_case_dir(root: Path | str, case_name: str) -> Path:
+    root_path = Path(root)
+    direct = root_path / case_name
+    if direct.exists():
+        return direct
+    chapter_case = root_path / 'cases' / case_name
+    if chapter_case.exists():
+        return chapter_case
+    mesh_case = root_path / 'mesh_sensitivity' / case_name
+    if mesh_case.exists():
+        return mesh_case
+    raise FileNotFoundError(f'Could not resolve case directory for {case_name!r} under {root_path}')
+
+
+def _decode_char_matrix(raw: np.ndarray | None) -> list[str]:
+    if raw is None:
+        return []
+    matrix = np.asarray(raw)
+    strings: list[str] = []
+    for row in matrix:
+        pieces: list[str] = []
+        for item in row:
+            if isinstance(item, bytes):
+                pieces.append(item.decode('utf-8', errors='ignore'))
+            else:
+                pieces.append(str(item))
+        strings.append(''.join(pieces).replace('\x00', '').strip())
+    return strings
+
+
+def export_plot_geometry_cache(case_root: Path | str, force: bool = False) -> dict[str, Any]:
+    case_dir = Path(case_root)
+    cache_dir = case_dir / 'plot_cache'
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / 'mesh_geometry.npz'
+    metadata_path = cache_dir / 'mesh_geometry.json'
+    if cache_path.exists() and metadata_path.exists() and not force:
+        return load_plot_geometry_cache(case_dir)
+
+    msh_files = sorted(case_dir.glob('*.msh'))
+    if not msh_files:
+        raise FileNotFoundError(
+            f'No .msh file is available under {case_dir}. '
+            'A plot cache must be exported once while the local mesh file is present.'
+        )
+
+    msh_path = msh_files[0]
+    with netcdf_file(str(msh_path), 'r', mmap=False) as dataset:
+        vertices = np.asarray(dataset.variables['vertices'].data, dtype=float)
+        triangles = np.asarray(dataset.variables['triangles'].data, dtype=np.int32)
+        segments_var = dataset.variables.get('segments')
+        segments = (
+            np.asarray(segments_var.data, dtype=np.int32)
+            if segments_var is not None
+            else np.empty((0, 2), dtype=np.int32)
+        )
+        triangle_neighbors_var = dataset.variables.get('triangle_neighbors')
+        triangle_neighbors = (
+            np.asarray(triangle_neighbors_var.data, dtype=np.int32)
+            if triangle_neighbors_var is not None
+            else np.empty((0, 3), dtype=np.int32)
+        )
+        segment_tags_var = dataset.variables.get('segment_tags')
+        segment_tags = _decode_char_matrix(segment_tags_var.data if segment_tags_var is not None else None)
+
+    polygons = vertices[triangles]
+    centroids = polygons.mean(axis=1)
+    bounds = np.asarray(
+        [
+            float(vertices[:, 0].min()),
+            float(vertices[:, 0].max()),
+            float(vertices[:, 1].min()),
+            float(vertices[:, 1].max()),
+        ],
+        dtype=float,
+    )
+
+    np.savez_compressed(
+        cache_path,
+        vertices=vertices,
+        triangles=triangles,
+        segments=segments,
+        triangle_neighbors=triangle_neighbors,
+        centroids=centroids,
+        bounds=bounds,
+    )
+    metadata = {
+        'source_msh': msh_path.name,
+        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'num_vertices': int(vertices.shape[0]),
+        'num_triangles': int(triangles.shape[0]),
+        'num_segments': int(segments.shape[0]),
+        'segment_tags': segment_tags,
+        'cache_format': 'mesh_geometry.npz',
+    }
+    metadata_path.write_text(json.dumps(metadata, indent=2), encoding='utf-8')
+    return load_plot_geometry_cache(case_dir)
+
+
+def load_plot_geometry_cache(case_root: Path | str) -> dict[str, Any]:
+    case_dir = Path(case_root)
+    cache_dir = case_dir / 'plot_cache'
+    cache_path = cache_dir / 'mesh_geometry.npz'
+    metadata_path = cache_dir / 'mesh_geometry.json'
+    if not cache_path.exists():
+        raise FileNotFoundError(f'Missing plot geometry cache: {cache_path}')
+    payload = np.load(cache_path, allow_pickle=False)
+    metadata = load_json_payload(metadata_path) if metadata_path.exists() else {}
+    geometry = {
+        'vertices': np.asarray(payload['vertices'], dtype=float),
+        'triangles': np.asarray(payload['triangles'], dtype=np.int32),
+        'segments': np.asarray(payload['segments'], dtype=np.int32),
+        'triangle_neighbors': np.asarray(payload['triangle_neighbors'], dtype=np.int32),
+        'centroids': np.asarray(payload['centroids'], dtype=float),
+        'bounds': np.asarray(payload['bounds'], dtype=float),
+        'metadata': metadata,
+        'case_dir': case_dir,
+        'cache_dir': cache_dir,
+        'polygons': np.asarray(payload['vertices'], dtype=float)[np.asarray(payload['triangles'], dtype=np.int32)],
+    }
+    return geometry
+
+
+def validate_plot_geometry_cache(geometry: Mapping[str, Any], expected_cell_count: int | None = None) -> None:
+    vertices = np.asarray(geometry['vertices'], dtype=float)
+    triangles = np.asarray(geometry['triangles'], dtype=np.int32)
+    centroids = np.asarray(geometry['centroids'], dtype=float)
+    bounds = np.asarray(geometry['bounds'], dtype=float)
+    if vertices.ndim != 2 or vertices.shape[1] != 2:
+        raise ValueError('Plot geometry cache vertices must have shape (n, 2)')
+    if triangles.ndim != 2 or triangles.shape[1] != 3:
+        raise ValueError('Plot geometry cache triangles must have shape (m, 3)')
+    if centroids.shape != (triangles.shape[0], 2):
+        raise ValueError('Plot geometry cache centroids do not align with triangles')
+    if bounds.shape != (4,):
+        raise ValueError('Plot geometry cache bounds must contain [xmin, xmax, ymin, ymax]')
+    if expected_cell_count is not None and int(triangles.shape[0]) != int(expected_cell_count):
+        raise ValueError(
+            f'Plot geometry cache triangle count {triangles.shape[0]} '
+            f'does not match expected cell count {expected_cell_count}'
+        )
+
+
+def load_mesh_geometry_for_case(root: Path | str, case_name: str) -> dict[str, Any]:
+    case_dir = resolve_case_dir(root, case_name)
+    cache_path = case_dir / 'plot_cache' / 'mesh_geometry.npz'
+    if not cache_path.exists():
+        export_plot_geometry_cache(case_dir)
+    geometry = load_plot_geometry_cache(case_dir)
+    field_summary_path = case_dir / 'two_d_field_summary.csv'
+    if field_summary_path.exists():
+        expected_cells = _row_count(load_csv_rows(field_summary_path))
+        validate_plot_geometry_cache(geometry, expected_cell_count=expected_cells)
+    else:
+        validate_plot_geometry_cache(geometry)
+    return geometry
+
+
+def build_cell_value_array(
+    rows: Sequence[Mapping[str, str]],
+    value_key: str,
+    *,
+    expected_cells: int,
+    fill_value: float = np.nan,
+) -> np.ndarray:
+    assert_nonempty_dataframe(rows, f'rows for {value_key}')
+    assert_required_columns(rows, ('cell_id', value_key), f'rows for {value_key}')
+    values = np.full(int(expected_cells), float(fill_value), dtype=float)
+    for row in rows:
+        cell_id = int(row['cell_id'])
+        raw_value = row.get(value_key, '')
+        values[cell_id] = float(raw_value) if raw_value not in ('', None) else np.nan
+    return values
+
+
+def build_snapshot_value_array(
+    rows: Sequence[Mapping[str, str]],
+    snapshot_id: str,
+    value_key: str,
+    *,
+    expected_cells: int,
+    fill_value: float = np.nan,
+) -> np.ndarray:
+    filtered = [row for row in rows if row.get('snapshot_id') == snapshot_id]
+    assert_nonempty_dataframe(filtered, f'{value_key} rows for {snapshot_id}')
+    return build_cell_value_array(filtered, value_key, expected_cells=expected_cells, fill_value=fill_value)
+
+
+def compute_robust_color_limits(
+    values: Sequence[float] | np.ndarray,
+    *,
+    symmetric: bool = False,
+    quantiles: tuple[float, float] = (0.02, 0.98),
+) -> tuple[float, float]:
+    finite = assert_finite_range(values, 'color values')
+    lower = float(np.nanquantile(finite, quantiles[0]))
+    upper = float(np.nanquantile(finite, quantiles[1]))
+    if symmetric:
+        bound = max(abs(lower), abs(upper), abs(float(np.nanmin(finite))), abs(float(np.nanmax(finite))))
+        if bound <= 0.0:
+            bound = 1.0
+        return -bound, bound
+    if upper <= lower:
+        center = float(finite[0])
+        pad = max(abs(center) * 0.05, 1.0e-3)
+        return center - pad, center + pad
+    return lower, upper
+
+
+def _collection_cmap(cmap_name: str, nan_color: str) -> colors.Colormap:
+    cmap = matplotlib.colormaps.get_cmap(cmap_name).copy()
+    cmap.set_bad(color=nan_color)
+    return cmap
+
+
+def render_scalar_field_on_mesh(
+    ax,
+    geometry: Mapping[str, Any],
+    scalar_values: Sequence[float] | np.ndarray,
+    *,
+    cmap: str = 'viridis',
+    label: str | None = None,
+    limits: tuple[float, float] | None = None,
+    symmetric: bool = False,
+    nan_color: str = '#efefef',
+    mesh_edgecolor: str = '0.65',
+    mesh_linewidth: float = 0.18,
+    mesh_alpha: float = 0.8,
+):
+    values = np.asarray(scalar_values, dtype=float)
+    geometry_vertices = np.asarray(geometry['vertices'], dtype=float)
+    triangles = np.asarray(geometry['triangles'], dtype=np.int32)
+    bounds = np.asarray(geometry['bounds'], dtype=float)
+    cmap_obj = _collection_cmap(cmap, nan_color)
+
+    if limits is None:
+        limits = compute_robust_color_limits(values, symmetric=symmetric)
+    vmin, vmax = limits
+    if symmetric:
+        norm = colors.TwoSlopeNorm(vcenter=0.0, vmin=vmin, vmax=vmax)
+    else:
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+
+    if values.shape[0] == triangles.shape[0]:
+        polygons = geometry_vertices[triangles]
+        collection = PolyCollection(
+            polygons,
+            array=np.ma.masked_invalid(values),
+            cmap=cmap_obj,
+            norm=norm,
+            edgecolors=mesh_edgecolor,
+            linewidths=mesh_linewidth,
+            alpha=mesh_alpha,
+        )
+        ax.add_collection(collection)
+        mappable = collection
+    elif values.shape[0] == geometry_vertices.shape[0]:
+        triangulation = mtri.Triangulation(geometry_vertices[:, 0], geometry_vertices[:, 1], triangles=triangles)
+        mappable = ax.tripcolor(triangulation, values, shading='gouraud', cmap=cmap_obj, norm=norm)
+        ax.triplot(
+            triangulation,
+            color=mesh_edgecolor,
+            linewidth=mesh_linewidth,
+            alpha=mesh_alpha,
+        )
+    else:
+        raise ValueError(
+            f'Scalar field length {values.shape[0]} does not match either '
+            f'cell count {triangles.shape[0]} or vertex count {geometry_vertices.shape[0]}'
+        )
+
+    ax.set_xlim(float(bounds[0]), float(bounds[1]))
+    ax.set_ylim(float(bounds[2]), float(bounds[3]))
+    ax.set_aspect('equal', adjustable='box')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    if label is not None:
+        ax.set_title(label)
+    return mappable
+
+
+def draw_mesh_outline(
+    ax,
+    geometry: Mapping[str, Any],
+    *,
+    facecolor: str = '#fafafa',
+    edgecolor: str = '0.70',
+    linewidth: float = 0.18,
+    alpha: float = 1.0,
+):
+    polygons = np.asarray(geometry['polygons'], dtype=float)
+    bounds = np.asarray(geometry['bounds'], dtype=float)
+    collection = PolyCollection(
+        polygons,
+        facecolors=facecolor,
+        edgecolors=edgecolor,
+        linewidths=linewidth,
+        alpha=alpha,
+    )
+    ax.add_collection(collection)
+    ax.set_xlim(float(bounds[0]), float(bounds[1]))
+    ax.set_ylim(float(bounds[2]), float(bounds[3]))
+    ax.set_aspect('equal', adjustable='box')
+    return collection
+
+
+def shared_color_limits(
+    arrays: Iterable[Sequence[float] | np.ndarray],
+    *,
+    symmetric: bool = False,
+) -> tuple[float, float]:
+    finite_chunks = [assert_finite_range(values, 'shared color values') for values in arrays]
+    if not finite_chunks:
+        raise ValueError('No arrays were supplied for shared color limits')
+    merged = np.concatenate(finite_chunks)
+    return compute_robust_color_limits(merged, symmetric=symmetric)
+
+
+def blank_image_audit(
+    image_path: Path | str,
+    *,
+    is_2d_map: bool = False,
+    manifest_row: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    path = Path(image_path)
+    image = Image.open(path).convert('RGB')
+    array = np.asarray(image, dtype=np.float32) / 255.0
+    white_mask = np.all(array >= 0.985, axis=2)
+    nonwhite_ratio = float(1.0 - white_mask.mean())
+    variance = float(array.var())
+    flattened = array.reshape(-1, 3)
+    sample = flattened[:: max(1, flattened.shape[0] // 20000)]
+    unique_colors = int(np.unique((sample * 255.0).astype(np.uint8), axis=0).shape[0])
+    dominant_fraction = float(np.max(np.unique((sample * 255.0).astype(np.uint8), axis=0, return_counts=True)[1]) / sample.shape[0])
+    near_blank = bool(
+        (nonwhite_ratio < 0.008 and variance < 0.0015)
+        or (is_2d_map and nonwhite_ratio < 0.12 and variance < 0.04)
+        or (unique_colors <= 3 and variance < 0.0015)
+    )
+    manifest_entry = ''
+    if manifest_row is not None:
+        manifest_entry = str(manifest_row.get('figure_id', ''))
+    return {
+        'file_name': path.name,
+        'file_size_bytes': int(path.stat().st_size),
+        'width_px': int(image.size[0]),
+        'height_px': int(image.size[1]),
+        'pixel_variance': variance,
+        'nonwhite_ratio': nonwhite_ratio,
+        'dominant_color_fraction': dominant_fraction,
+        'unique_color_count_sampled': unique_colors,
+        'is_approximately_blank': near_blank,
+        'is_2d_map': bool(is_2d_map),
+        'figure_manifest_id': manifest_entry,
+    }
+
+
+def audit_plot_directory(
+    plot_dir: Path | str,
+    *,
+    manifest_rows: Sequence[Mapping[str, str]] | None = None,
+) -> list[dict[str, Any]]:
+    directory = Path(plot_dir)
+    manifest_map: dict[str, Mapping[str, str]] = {}
+    if manifest_rows is not None:
+        manifest_map = {
+            Path(str(row.get('output_png_path', ''))).name: row
+            for row in manifest_rows
+        }
+    rows: list[dict[str, Any]] = []
+    for path in sorted(directory.glob('*')):
+        if path.suffix.lower() not in {'.png', '.pdf', '.svg'}:
+            continue
+        manifest_row = manifest_map.get(path.name)
+        is_2d_map = path.name.startswith('2d_') or path.name == 'test7_geometry_and_mesh.png' or path.name == 'flood_front_overlay.png'
+        rows.append(blank_image_audit(path, is_2d_map=is_2d_map, manifest_row=manifest_row))
+    return rows
+
+
+def write_csv_rows(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not rows:
+        path.write_text('', encoding='utf-8')
+        return
+    fieldnames = list(rows[0].keys())
+    with path.open('w', encoding='utf-8', newline='') as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)

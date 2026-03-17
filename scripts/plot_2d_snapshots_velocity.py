@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure
+from scripts._plot_common import (
+    assert_nonempty_dataframe,
+    assert_required_columns,
+    build_snapshot_value_array,
+    chapter_case_rows,
+    ensure_plot_dir,
+    load_chapter_summary_rows,
+    load_mesh_geometry_for_case,
+    plt,
+    render_scalar_field_on_mesh,
+    save_figure,
+    shared_color_limits,
+)
 
 
 COMPARE_SUFFIXES = ['strict_global_min_dt', 'yield_schedule', 'fixed_interval_015s', 'fixed_interval_060s']
@@ -20,12 +32,36 @@ def main(root: Path | str | None = None) -> None:
     plot_dir = ensure_plot_dir(root)
     family = _benchmark_family(load_chapter_summary_rows(root))
     fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
-    for ax, suffix in zip(axes.flat, COMPARE_SUFFIXES):
-        rows = chapter_case_rows(root, f'{family}_{suffix}', 'two_d_snapshots.csv')
-        snap = [row for row in rows if row['snapshot_id'] == 'snapshot_3']
-        sc = ax.scatter([float(row['x']) for row in snap], [float(row['y']) for row in snap], c=[float(row['velocity']) for row in snap], s=12, cmap='viridis')
-        ax.set_title(suffix.replace('fixed_interval_', ''))
-    fig.colorbar(sc, ax=axes.ravel().tolist(), label='velocity')
+    case_names = [f'{family}_{suffix}' for suffix in COMPARE_SUFFIXES]
+    geometry_by_case = {case_name: load_mesh_geometry_for_case(root, case_name) for case_name in case_names}
+    rows_by_case = {case_name: chapter_case_rows(root, case_name, 'two_d_snapshots.csv') for case_name in case_names}
+    arrays = []
+    for case_name, rows in rows_by_case.items():
+        assert_nonempty_dataframe(rows, f'two_d_snapshots for {case_name}')
+        assert_required_columns(rows, ('snapshot_id', 'cell_id', 'velocity'), f'two_d_snapshots for {case_name}')
+        arrays.append(
+            build_snapshot_value_array(
+                rows,
+                'snapshot_3',
+                'velocity',
+                expected_cells=int(geometry_by_case[case_name]['triangles'].shape[0]),
+            )
+        )
+    limits = shared_color_limits(arrays)
+    sc = None
+    for ax, suffix, case_name, values in zip(axes.flat, COMPARE_SUFFIXES, case_names, arrays):
+        rows = rows_by_case[case_name]
+        snapshot_rows = [row for row in rows if row['snapshot_id'] == 'snapshot_3']
+        snapshot_time = float(snapshot_rows[0]['time'])
+        sc = render_scalar_field_on_mesh(
+            ax,
+            geometry_by_case[case_name],
+            values,
+            cmap='viridis',
+            limits=limits,
+            label=f"{suffix.replace('fixed_interval_', '')} | t={snapshot_time:.1f}s",
+        )
+    fig.colorbar(sc, ax=axes.ravel().tolist(), label='velocity (m/s)')
     save_figure(fig, plot_dir / '2d_snapshots_velocity.png')
 
 

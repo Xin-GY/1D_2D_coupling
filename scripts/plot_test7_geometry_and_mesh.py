@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_json, chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure
+from scripts._plot_common import (
+    chapter_case_json,
+    draw_mesh_outline,
+    ensure_plot_dir,
+    load_chapter_summary_rows,
+    load_mesh_geometry_for_case,
+    plt,
+    save_figure,
+)
 
 
 def _benchmark_family(rows: list[dict[str, str]]) -> str:
@@ -20,9 +28,10 @@ def main(root: Path | str | None = None) -> None:
     family = _benchmark_family(summary_rows)
     case_name = f'{family}_strict_global_min_dt'
     geometry = chapter_case_json(root, case_name, 'geometry.json')
-    mesh_rows = chapter_case_rows(root, case_name, 'two_d_field_summary.csv')
+    mesh_geometry = load_mesh_geometry_for_case(root, case_name)
 
     fig, ax = plt.subplots(figsize=(10, 4.5))
+    draw_mesh_outline(ax, mesh_geometry, facecolor='#fbfbfb', edgecolor='0.72', linewidth=0.18, alpha=1.0)
     floodplain = geometry['floodplain_polygon'] + [geometry['floodplain_polygon'][0]]
     ax.plot([p[0] for p in floodplain], [p[1] for p in floodplain], color='black', lw=2, label='Floodplain boundary')
     centerline = geometry['centerline']
@@ -35,16 +44,13 @@ def main(root: Path | str | None = None) -> None:
         centroid_x = sum(point[0] for point in polygon) / len(polygon)
         centroid_y = sum(point[1] for point in polygon) / len(polygon)
         ax.text(centroid_x, centroid_y, name.replace('_', ' '), ha='center', va='center', fontsize=9)
-    xs = [float(row['x']) for row in mesh_rows]
-    ys = [float(row['y']) for row in mesh_rows]
-    ax.scatter(xs, ys, s=4, color='0.65', alpha=0.7, label='2D centroids')
     for probe in geometry['one_d_probes']:
-        ax.scatter([probe['cell_id'] * 10.0], [centerline[0][1]], marker='^', color='black')
+        ax.plot([probe['cell_id'] * 10.0], [centerline[0][1]], marker='^', color='black', linestyle='none')
         ax.text(probe['cell_id'] * 10.0, centerline[0][1] + 10.0, probe['probe_id'], fontsize=8)
     for probe in geometry['two_d_probes']:
         cx = sum(point[0] for point in probe['polygon']) / len(probe['polygon'])
         cy = sum(point[1] for point in probe['polygon']) / len(probe['polygon'])
-        ax.scatter([cx], [cy], marker='o', color='#d62828')
+        ax.plot([cx], [cy], marker='o', color='#d62828', linestyle='none')
         ax.text(cx, cy + 10.0, probe['probe_id'], fontsize=8)
     ax.set_title(f'{family} geometry / mesh')
     ax.set_xlabel('x')

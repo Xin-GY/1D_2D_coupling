@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +10,7 @@ from experiments.cases import generate_mesh_sensitivity_cases
 from experiments.chapter_cases import ChapterExperimentCase, generate_small_mechanism_cases, generate_test7_cases
 from experiments.chapter_metrics import rebuild_chapter_case_outputs
 from experiments.io import ensure_dir, read_csv, read_json, write_csv, write_json
+from experiments.chapter_plotting import refresh_chapter_plot_outputs
 from experiments.metrics import compute_case_analysis
 from experiments.test7_data import Test7DataProvenance, resolve_test7_data
 
@@ -429,23 +429,8 @@ def _aggregate_chapter_tables(cases: list[ChapterExperimentCase], outputs: dict[
 
 
 def _run_plot_scripts(outputs: dict[str, Path]) -> list[dict[str, Any]]:
-    figure_rows: list[dict[str, Any]] = []
-    for spec in CHAPTER_PLOT_SPECS:
-        module = importlib.import_module(spec['module_name'])
-        module.main(outputs['root'])
-        figure_rows.append(
-            {
-                'figure_id': spec['figure_id'],
-                'script_path': spec['module_name'].replace('.', '/') + '.py',
-                'input_data_paths': spec['input_data_paths'],
-                'output_png_path': spec['output_png_path'],
-                'caption_draft_cn': spec['caption_draft_cn'],
-                'caption_draft_en': spec['caption_draft_en'],
-                'chapter_section': spec['chapter_section'],
-            }
-        )
-    _write_table(outputs, 'figure_manifest', figure_rows)
-    return figure_rows
+    refresh_payload = refresh_chapter_plot_outputs(outputs['root'], CHAPTER_PLOT_SPECS)
+    return list(refresh_payload['figure_rows'])
 
 
 def _table_manifest_rows(outputs: dict[str, Path]) -> list[dict[str, Any]]:

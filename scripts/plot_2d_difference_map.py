@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure
+from scripts._plot_common import (
+    assert_nonempty_dataframe,
+    assert_required_columns,
+    build_cell_value_array,
+    chapter_case_rows,
+    ensure_plot_dir,
+    load_chapter_summary_rows,
+    load_mesh_geometry_for_case,
+    plt,
+    render_scalar_field_on_mesh,
+    save_figure,
+)
 
 
 def _benchmark_family(rows):
@@ -16,20 +27,28 @@ def main(root: Path | str | None = None) -> None:
     root = Path('artifacts/chapter_coupling_analysis') if root is None else Path(root)
     plot_dir = ensure_plot_dir(root)
     family = _benchmark_family(load_chapter_summary_rows(root))
-    ref_rows = chapter_case_rows(root, f'{family}_strict_global_min_dt', 'two_d_field_summary.csv')
-    case_rows = chapter_case_rows(root, f'{family}_fixed_interval_015s', 'two_d_field_summary.csv')
-    ref_map = {int(row['cell_id']): row for row in ref_rows}
-    case_map = {int(row['cell_id']): row for row in case_rows}
-    shared = sorted(set(ref_map).intersection(case_map))
+    ref_case = f'{family}_strict_global_min_dt'
+    case_name = f'{family}_fixed_interval_015s'
+    ref_rows = chapter_case_rows(root, ref_case, 'two_d_field_summary.csv')
+    case_rows = chapter_case_rows(root, case_name, 'two_d_field_summary.csv')
+    assert_nonempty_dataframe(ref_rows, f'two_d_field_summary for {ref_case}')
+    assert_nonempty_dataframe(case_rows, f'two_d_field_summary for {case_name}')
+    assert_required_columns(ref_rows, ('cell_id', 'max_depth'), f'two_d_field_summary for {ref_case}')
+    assert_required_columns(case_rows, ('cell_id', 'max_depth'), f'two_d_field_summary for {case_name}')
+    geometry = load_mesh_geometry_for_case(root, ref_case)
+    ref_values = build_cell_value_array(ref_rows, 'max_depth', expected_cells=int(geometry['triangles'].shape[0]))
+    case_values = build_cell_value_array(case_rows, 'max_depth', expected_cells=int(geometry['triangles'].shape[0]))
+    diff_values = case_values - ref_values
     fig, ax = plt.subplots(figsize=(10, 4.5))
-    sc = ax.scatter(
-        [float(case_map[cell_id]['x']) for cell_id in shared],
-        [float(case_map[cell_id]['y']) for cell_id in shared],
-        c=[float(case_map[cell_id]['max_depth']) - float(ref_map[cell_id]['max_depth']) for cell_id in shared],
-        s=14,
+    sc = render_scalar_field_on_mesh(
+        ax,
+        geometry,
+        diff_values,
         cmap='coolwarm',
+        symmetric=True,
+        label='15 s minus strict max depth',
     )
-    fig.colorbar(sc, ax=ax, label='max depth difference')
+    fig.colorbar(sc, ax=ax, label='max depth difference (m)')
     save_figure(fig, plot_dir / '2d_difference_map.png')
 
 

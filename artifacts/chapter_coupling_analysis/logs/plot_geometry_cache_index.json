@@ -1,0 +1,266 @@
+[
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_002s",
+    "cache_path": "cases/early_arrival_pulse_fixed_interval_002s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_005s",
+    "cache_path": "cases/early_arrival_pulse_fixed_interval_005s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_015s",
+    "cache_path": "cases/early_arrival_pulse_fixed_interval_015s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_060s",
+    "cache_path": "cases/early_arrival_pulse_fixed_interval_060s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_fixed_interval_300s",
+    "cache_path": "cases/early_arrival_pulse_fixed_interval_300s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_strict_global_min_dt",
+    "cache_path": "cases/early_arrival_pulse_strict_global_min_dt/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "early_arrival_pulse_yield_schedule",
+    "cache_path": "cases/early_arrival_pulse_yield_schedule/plot_cache/mesh_geometry.npz",
+    "num_triangles": 358,
+    "num_vertices": 200
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_002s",
+    "cache_path": "cases/frontal_basin_fill_fixed_interval_002s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_005s",
+    "cache_path": "cases/frontal_basin_fill_fixed_interval_005s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_015s",
+    "cache_path": "cases/frontal_basin_fill_fixed_interval_015s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_060s",
+    "cache_path": "cases/frontal_basin_fill_fixed_interval_060s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_fixed_interval_300s",
+    "cache_path": "cases/frontal_basin_fill_fixed_interval_300s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_strict_global_min_dt",
+    "cache_path": "cases/frontal_basin_fill_strict_global_min_dt/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "frontal_basin_fill_yield_schedule",
+    "cache_path": "cases/frontal_basin_fill_yield_schedule/plot_cache/mesh_geometry.npz",
+    "num_triangles": 287,
+    "num_vertices": 162
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_002s",
+    "cache_path": "cases/lateral_overtopping_return_fixed_interval_002s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_005s",
+    "cache_path": "cases/lateral_overtopping_return_fixed_interval_005s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_015s",
+    "cache_path": "cases/lateral_overtopping_return_fixed_interval_015s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_060s",
+    "cache_path": "cases/lateral_overtopping_return_fixed_interval_060s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_fixed_interval_300s",
+    "cache_path": "cases/lateral_overtopping_return_fixed_interval_300s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_strict_global_min_dt",
+    "cache_path": "cases/lateral_overtopping_return_strict_global_min_dt/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "lateral_overtopping_return_yield_schedule",
+    "cache_path": "cases/lateral_overtopping_return_yield_schedule/plot_cache/mesh_geometry.npz",
+    "num_triangles": 505,
+    "num_vertices": 278
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_002s",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_fixed_interval_002s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_005s",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_fixed_interval_005s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_015s",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_fixed_interval_015s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_060s",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_fixed_interval_060s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_fixed_interval_300s",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_fixed_interval_300s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_strict_global_min_dt",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_strict_global_min_dt/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "regime_switch_backwater_or_mixed_yield_schedule",
+    "cache_path": "cases/regime_switch_backwater_or_mixed_yield_schedule/plot_cache/mesh_geometry.npz",
+    "num_triangles": 558,
+    "num_vertices": 308
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_002s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_002s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_003s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_003s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_005s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_005s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_010s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_010s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_015s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_015s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_030s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_030s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_060s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_060s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_fixed_interval_300s",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_fixed_interval_300s/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_strict_global_min_dt/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "surrogate_test7_overtopping_only_variant_yield_schedule",
+    "cache_path": "cases/surrogate_test7_overtopping_only_variant_yield_schedule/plot_cache/mesh_geometry.npz",
+    "num_triangles": 779,
+    "num_vertices": 412
+  },
+  {
+    "case_name": "aligned_mesh_coarse",
+    "cache_path": "mesh_sensitivity/aligned_mesh_coarse/plot_cache/mesh_geometry.npz",
+    "num_triangles": 123,
+    "num_vertices": 76
+  },
+  {
+    "case_name": "aligned_mesh_fine",
+    "cache_path": "mesh_sensitivity/aligned_mesh_fine/plot_cache/mesh_geometry.npz",
+    "num_triangles": 337,
+    "num_vertices": 187
+  },
+  {
+    "case_name": "narrow_corridor_refine",
+    "cache_path": "mesh_sensitivity/narrow_corridor_refine/plot_cache/mesh_geometry.npz",
+    "num_triangles": 465,
+    "num_vertices": 251
+  },
+  {
+    "case_name": "rotated_mesh_coarse",
+    "cache_path": "mesh_sensitivity/rotated_mesh_coarse/plot_cache/mesh_geometry.npz",
+    "num_triangles": 148,
+    "num_vertices": 89
+  },
+  {
+    "case_name": "rotated_mesh_fine",
+    "cache_path": "mesh_sensitivity/rotated_mesh_fine/plot_cache/mesh_geometry.npz",
+    "num_triangles": 322,
+    "num_vertices": 182
+  },
+  {
+    "case_name": "wide_corridor_refine",
+    "cache_path": "mesh_sensitivity/wide_corridor_refine/plot_cache/mesh_geometry.npz",
+    "num_triangles": 306,
+    "num_vertices": 170
+  }
+]

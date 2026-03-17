@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure
+from scripts._plot_common import (
+    assert_nonempty_dataframe,
+    assert_required_columns,
+    build_cell_value_array,
+    chapter_case_rows,
+    ensure_plot_dir,
+    load_chapter_summary_rows,
+    load_mesh_geometry_for_case,
+    plt,
+    render_scalar_field_on_mesh,
+    save_figure,
+)
 
 
 def _benchmark_family(rows):
@@ -16,10 +27,15 @@ def main(root: Path | str | None = None) -> None:
     root = Path('artifacts/chapter_coupling_analysis') if root is None else Path(root)
     plot_dir = ensure_plot_dir(root)
     family = _benchmark_family(load_chapter_summary_rows(root))
-    rows = chapter_case_rows(root, f'{family}_strict_global_min_dt', 'two_d_field_summary.csv')
+    case_name = f'{family}_strict_global_min_dt'
+    rows = chapter_case_rows(root, case_name, 'two_d_field_summary.csv')
+    assert_nonempty_dataframe(rows, f'two_d_field_summary for {case_name}')
+    assert_required_columns(rows, ('cell_id', 'max_depth'), f'two_d_field_summary for {case_name}')
+    geometry = load_mesh_geometry_for_case(root, case_name)
+    values = build_cell_value_array(rows, 'max_depth', expected_cells=int(geometry['triangles'].shape[0]))
     fig, ax = plt.subplots(figsize=(10, 4.5))
-    sc = ax.scatter([float(row['x']) for row in rows], [float(row['y']) for row in rows], c=[float(row['max_depth']) for row in rows], s=14, cmap='Blues')
-    fig.colorbar(sc, ax=ax, label='max depth')
+    sc = render_scalar_field_on_mesh(ax, geometry, values, cmap='Blues', label='Reference max depth')
+    fig.colorbar(sc, ax=ax, label='max depth (m)')
     save_figure(fig, plot_dir / '2d_max_depth_map.png')
 
 
