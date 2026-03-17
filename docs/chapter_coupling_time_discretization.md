@@ -98,6 +98,54 @@
 - 默认测试不允许 skip-based 逃避。
 - 所有图脚本都必须独立可重跑。
 
+## 2D 论文图渲染与空白图修复
+- 本章所有 2D 区域图现在统一采用：
+  - 全网格面着色；
+  - 细灰色网格线叠加；
+  - equal aspect；
+  - 多 panel 对比时共享色标范围；
+  - difference map 使用对称色标；
+  - NaN / no-data 采用浅灰色而不是纯白。
+- 受影响的图包括：
+  - `2d_snapshots_depth`
+  - `2d_snapshots_velocity`
+  - `2d_max_depth_map`
+  - `2d_arrival_time_map`
+  - `2d_difference_map`
+  - `flood_front_overlay`
+  - `test7_geometry_and_mesh`
+- 这轮修复前，chapter 结果中的“近似空白图”主要来自两类原因：
+  - 2D 主图使用 centroid scatter / wet-point overlay，视觉上只占据很少像素；
+  - 某些标量场近乎常数，例如当前 surrogate benchmark 的 arrival time map 全域均为 `0.0 s`，导致旧图在稀疏散点和默认色标下近似单色。
+- 修复后，plotting 主路径变为 mesh-based renderer：
+  - cell scalar 使用 face-colored `PolyCollection`；
+  - 如有 vertex scalar，可转为 triangulation-based 渲染；
+  - flood front 采用 mesh 背景 + 前沿边界叠置，而不是点云。
+- 同时新增 blank-image QA：
+  - chapter plots 会输出 `blank_plot_audit.csv/json`；
+  - plotting 脚本在数据为空或缺列时 fail-fast，不再静默生成白图。
+
+## Geometry Cache 与可重复性
+- chapter 2D 图现在不再依赖运行时读取未跟踪的 `.msh` 文件。
+- 每个需要 2D 渲染的 case 会导出一个轻量 `plot_cache`：
+  - `mesh_geometry.npz`
+  - `mesh_geometry.json`
+- cache 中至少保存：
+  - vertices
+  - triangles
+  - bounds
+  - centroids
+  - segments / neighbors 等绘图所需网格信息
+- 绘图时的几何读取优先级固定为：
+  - `plot_cache`
+  - 若本地仍有 `.msh`，可一次性导出 cache
+  - cache 与 `.msh` 同时缺失时直接报错
+- 因此，论文图的再生成现在依赖：
+  - `cases/<case_name>/plot_cache/`
+  - `two_d_snapshots.csv`
+  - `two_d_field_summary.csv`
+  - 以及现有 summary / manifest 文件
+
 ## 结果解读位置
 - 定量 summary 表位于：
   - `artifacts/chapter_coupling_analysis/summaries/summary_table.csv`

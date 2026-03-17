@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -31,6 +32,15 @@ def _run_python_module(*args: str) -> None:
 @pytest.fixture(scope='session')
 def coupling_sweep_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path:
     output_root = tmp_path_factory.mktemp('coupling_sweep') / 'coupling_sweep'
+    source_root = REPO_ROOT / 'artifacts' / 'coupling_sweep'
+    if source_root.exists():
+        shutil.copytree(
+            source_root,
+            output_root,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns('*.msh', '*.pyc', '__pycache__'),
+        )
+        return output_root
     _run_python_module('experiments.run_coupling_sweep', '--suite', 'legacy', '--output-root', str(output_root))
     return output_root
 
@@ -38,6 +48,17 @@ def coupling_sweep_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path:
 @pytest.fixture(scope='session')
 def chapter_analysis_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path:
     output_root = tmp_path_factory.mktemp('chapter_analysis') / 'chapter_coupling_analysis'
+    source_root = REPO_ROOT / 'artifacts' / 'chapter_coupling_analysis'
+    if source_root.exists():
+        shutil.copytree(
+            source_root,
+            output_root,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns('*.msh', '*.pyc', '__pycache__'),
+        )
+        _run_python_module('experiments.refresh_chapter_plots', '--output-root', str(output_root))
+        return output_root
+
     _run_python_module(
         'experiments.run_coupling_sweep',
         '--suite',

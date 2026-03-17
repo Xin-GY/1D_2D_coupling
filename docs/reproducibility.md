@@ -48,3 +48,39 @@
 - Arrival-time metrics use linear threshold-crossing interpolation.
 - Comparative series metrics are evaluated on a common analysis grid.
 - Plot scripts read only from artifacts, so figures are reproducible from saved CSV/JSON outputs.
+
+## Plot Regeneration Without `.msh`
+- Chapter-level 2D figures no longer depend on untracked `.msh` files at redraw time.
+- Each chapter case now carries a committed `plot_cache/` directory containing:
+  - `mesh_geometry.npz`
+  - `mesh_geometry.json`
+- The cache stores the lightweight plotting geometry needed for paper figures:
+  - vertices
+  - triangles / connectivity
+  - bounds
+  - centroids
+  - basic segment / neighbor metadata
+- Plotting code resolves geometry in this order:
+  - existing `plot_cache`
+  - local `.msh` only for one-time cache export
+  - otherwise fail-fast with a clear geometry-missing error
+- This means a fresh clone can redraw the chapter figures from the tracked artifacts alone, without recovering ignored mesh files.
+
+## Refreshing Chapter Plots Only
+- To refresh chapter figures, manifests, plot QA, and geometry caches without rerunning chapter simulations:
+```bash
+/home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python -m experiments.refresh_chapter_plots --output-root artifacts/chapter_coupling_analysis
+```
+- This command:
+  - exports any missing `plot_cache` from locally available `.msh` once;
+  - redraws chapter plots from existing artifacts only;
+  - writes `logs/blank_plot_audit.csv/json`;
+  - updates `summaries/figure_manifest.csv` with geometry/render/blank-check metadata.
+
+## Plot QA
+- Blank / near-blank auditing is part of the plotting toolchain.
+- The chapter artifact log directory now includes:
+  - `blank_plot_audit_before.csv/json`
+  - `blank_plot_audit.csv/json`
+  - `plot_geometry_cache_index.csv/json`
+- The 2D chapter figures are expected to use full-mesh face coloring with gray mesh edges, rather than centroid scatter or point-only flood-front overlays.

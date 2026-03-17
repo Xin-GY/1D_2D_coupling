@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import importlib
 
+from experiments.io import read_csv
+from scripts._plot_common import blank_image_audit
+
 
 PLOT_MODULES = {
     'scripts.plot_stage_1d_compare': 'stage_1d_compare.png',
@@ -70,8 +73,24 @@ def test_chapter_plot_scripts_generate_nonempty_pngs(chapter_analysis_artifacts)
         png_path = plot_dir / png_name
         assert png_path.exists(), f'{module_name} did not create {png_name}'
         assert png_path.stat().st_size > 0, f'{png_name} is empty'
+        is_2d_map = png_name.startswith('2d_') or png_name in {'flood_front_overlay.png', 'test7_geometry_and_mesh.png'}
+        audit = blank_image_audit(png_path, is_2d_map=is_2d_map)
+        assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'
+        assert audit['width_px'] >= 1000
+        assert audit['height_px'] >= 500
 
     figure_manifest = chapter_analysis_artifacts / 'summaries' / 'figure_manifest.csv'
     table_manifest = chapter_analysis_artifacts / 'summaries' / 'table_manifest.csv'
     assert figure_manifest.exists()
     assert table_manifest.exists()
+    rows = read_csv(figure_manifest)
+    assert rows
+    required_columns = {
+        'figure_id',
+        'script_path',
+        'geometry_source',
+        'render_mode',
+        'blank_check_status',
+        'regenerated_at',
+    }
+    assert required_columns.issubset(rows[0].keys())
