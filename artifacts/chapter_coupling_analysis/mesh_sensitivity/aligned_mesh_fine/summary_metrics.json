@@ -1,0 +1,22 @@
+{
+  "case_name": "aligned_mesh_fine",
+  "wall_clock_seconds": 5.785868303035386,
+  "simulated_duration": 120.0,
+  "exchange_count": 4624,
+  "cumulative_exchange_volume": 243.30318610457513,
+  "final_total_mass_error": 12.04624320790083,
+  "max_abs_mass_error": 33.50070837973351,
+  "cumulative_mass_error": 1953.031456675991,
+  "normalized_mass_error": 0.057776141897335286,
+  "peak_stage_1d": 0.8872212568918864,
+  "peak_stage_2d": 0.8878582716194179,
+  "peak_Q_exchange": 3.77217714783935,
+  "triangle_count": 337,
+  "RMSE_stage_vs_reference": 0.0,
+  "max_abs_stage_diff_vs_reference": 0.0,
+  "arrival_time_diff_vs_reference": 0.0,
+  "phase_lag_seconds": 0.0,
+  "peak_stage_error": 0.0,
+  "peak_time_error": 0.0,
+  "hydrograph_NSE": 1.0
+}

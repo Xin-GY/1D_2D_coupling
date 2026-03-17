@@ -1,0 +1,109 @@
+{
+  "case_name": "surrogate_test7_overtopping_only_variant_yield_schedule",
+  "scenario_family": "surrogate_test7_overtopping_only_variant",
+  "scheduler_mode": "yield_schedule",
+  "exchange_interval": null,
+  "coupling_type": "mixed",
+  "direction": "river_to_floodplain",
+  "waveform": "benchmark_pulse",
+  "duration": 120.0,
+  "reference_policy": "strict_global_min_dt_plus_finest_practical_mesh",
+  "partition_defs": {
+    "Floodplain_1": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        237.60000000000002,
+        0.0
+      ],
+      [
+        237.60000000000002,
+        240.0
+      ],
+      [
+        0.0,
+        240.0
+      ]
+    ],
+    "Floodplain_2": [
+      [
+        237.60000000000002,
+        0.0
+      ],
+      [
+        475.20000000000005,
+        0.0
+      ],
+      [
+        475.20000000000005,
+        240.0
+      ],
+      [
+        237.60000000000002,
+        240.0
+      ]
+    ],
+    "Floodplain_3": [
+      [
+        475.20000000000005,
+        0.0
+      ],
+      [
+        720.0,
+        0.0
+      ],
+      [
+        720.0,
+        240.0
+      ],
+      [
+        475.20000000000005,
+        240.0
+      ]
+    ]
+  },
+  "probe_defs": {
+    "primary_stage_probe": "mainstem_mid",
+    "primary_discharge_probe": "mainstem_right_q"
+  },
+  "link_probe_ids": [
+    "fp1_overtop",
+    "fp2_return",
+    "fp3_overtop",
+    "front_main"
+  ],
+  "analysis_raster": {
+    "mode": "centroids"
+  },
+  "case_variant": "surrogate_test7_overtopping_only_variant",
+  "data_provenance": {
+    "case_variant": "surrogate_test7_overtopping_only_variant",
+    "source_mode": "surrogate",
+    "source_page_url": "https://www.gov.uk/government/publications/benchmarking-the-latest-generation-of-2d-hydraulic-flood-modelling-packages",
+    "technical_report_url": null,
+    "model_zip_url": null,
+    "local_report_path": null,
+    "local_zip_path": null,
+    "download_attempted": false,
+    "download_succeeded": false,
+    "fallback_reason": "official_data_not_found_and_download_disabled",
+    "notes": [
+      "未找到官方缓存，且下载被禁用，转入 documented surrogate。"
+    ]
+  },
+  "runtime_profile": "test",
+  "one_d_yields": [
+    21.599999999999998,
+    50.4,
+    79.2,
+    105.6
+  ],
+  "two_d_yields": [
+    28.799999999999997,
+    60.0,
+    88.8
+  ],
+  "reference_case_name": "surrogate_test7_overtopping_only_variant_strict_global_min_dt"
+}

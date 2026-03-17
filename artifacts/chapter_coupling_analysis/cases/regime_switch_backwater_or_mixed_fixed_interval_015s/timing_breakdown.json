@@ -1,0 +1,8 @@
+{
+  "one_d_advance_time": 0.3088769492460415,
+  "two_d_gpu_kernel_time": 0.6286607878282666,
+  "boundary_update_time": 0.39358875434845686,
+  "gpu_inlets_apply_time": 0.036497003166005015,
+  "scheduler_manager_overhead": 0.643604192417115,
+  "wall_clock_seconds": 2.011227687005885
+}

@@ -1,0 +1,3 @@
+link_id,time,dt_exchange,eta_1d,eta_2d,Q_exchange,dV_exchange,cumulative_dV,mass_error,mode,iteration_count
+return_link,60.0,60.0,0.98,0.5599999999999999,2.3863073127692505,143.17843876615504,143.17843876615504,0.0,fixed_interval,1
+return_link,80.0,20.0,0.6415951251983643,0.5810495661539651,0.0,0.0,143.17843876615504,0.0,fixed_interval,1

@@ -1,0 +1,4 @@
+case_name,scenario_family,partition,max_depth_map_difference,arrival_time_map_difference,inundated_area_difference,wet_area_iou,wet_area_csi
+surrogate_test7_overtopping_only_variant_fixed_interval_300s,surrogate_test7_overtopping_only_variant,Floodplain_1,0.046882229525609054,0.0,0.0,1.0,1.0
+surrogate_test7_overtopping_only_variant_fixed_interval_300s,surrogate_test7_overtopping_only_variant,Floodplain_2,0.09749142283195297,0.0,0.0,1.0,1.0
+surrogate_test7_overtopping_only_variant_fixed_interval_300s,surrogate_test7_overtopping_only_variant,Floodplain_3,0.20190636494054548,0.0,0.0,1.0,1.0

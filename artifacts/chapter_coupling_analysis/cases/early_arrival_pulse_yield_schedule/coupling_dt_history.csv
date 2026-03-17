@@ -1,0 +1,9 @@
+time,dt_exchange,mode
+7.2,7.2,yield_schedule
+9.6,2.3999999999999995,yield_schedule
+16.8,7.200000000000001,yield_schedule
+20.0,3.1999999999999993,yield_schedule
+26.4,6.399999999999999,yield_schedule
+29.6,3.200000000000003,yield_schedule
+35.2,5.600000000000001,yield_schedule
+40.0,4.799999999999997,yield_schedule

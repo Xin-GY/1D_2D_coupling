@@ -1,0 +1,2 @@
+time,link_id,Q_exchange,deta,dV_exchange,cumulative_dV,eta_1d,eta_2d,mode,iteration_count
+80.0,return_link,2.3863073127692505,0.42000000000000004,190.90458502154004,190.90458502154004,0.98,0.5599999999999999,fixed_interval,1

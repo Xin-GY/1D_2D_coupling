@@ -1,0 +1,3 @@
+case_name,scenario_family,link_id,link_type,exchange_event_count,peak_Q_exchange,cumulative_exchange_volume,sign_flip_count,mean_deta,first_exchange_time,link_mass_closure_error
+early_arrival_pulse_fixed_interval_002s,early_arrival_pulse,early_link,lateral_exchange,20,0.9035138094290489,15.108256894188857,0,0.5421051607053072,2.0,0.0
+early_arrival_pulse_fixed_interval_002s,early_arrival_pulse,front_main,frontal_direct,20,4.610152085706376,175.96203298913164,0,0.0,2.0,0.0

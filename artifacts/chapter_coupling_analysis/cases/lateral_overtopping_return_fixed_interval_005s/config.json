@@ -1,0 +1,58 @@
+{
+  "case_name": "lateral_overtopping_return_fixed_interval_005s",
+  "scenario_family": "lateral_overtopping_return",
+  "scheduler_mode": "fixed_interval",
+  "exchange_interval": 5.0,
+  "coupling_type": "lateral_only",
+  "direction": "bidirectional",
+  "waveform": "return_pulse",
+  "duration": 80.0,
+  "reference_policy": "strict_global_min_dt",
+  "partition_defs": {
+    "storage_plain": [
+      [
+        35.0,
+        37.120000000000005
+      ],
+      [
+        105.0,
+        37.120000000000005
+      ],
+      [
+        105.0,
+        56.0
+      ],
+      [
+        35.0,
+        56.0
+      ]
+    ]
+  },
+  "probe_defs": {
+    "primary_stage_probe": "mainstem_mid",
+    "primary_discharge_probe": "mainstem_right_q"
+  },
+  "link_probe_ids": [
+    "return_link"
+  ],
+  "analysis_raster": {
+    "mode": "centroids"
+  },
+  "case_variant": "mechanism",
+  "data_provenance": {
+    "mode": "synthetic_mechanism"
+  },
+  "runtime_profile": "test",
+  "one_d_yields": [
+    14.399999999999999,
+    33.6,
+    52.800000000000004,
+    70.4
+  ],
+  "two_d_yields": [
+    19.2,
+    40.0,
+    59.2
+  ],
+  "reference_case_name": "lateral_overtopping_return_strict_global_min_dt"
+}

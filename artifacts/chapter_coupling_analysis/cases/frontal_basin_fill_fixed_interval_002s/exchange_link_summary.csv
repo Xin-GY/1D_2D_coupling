@@ -1,0 +1,2 @@
+case_name,scenario_family,link_id,link_type,exchange_event_count,peak_Q_exchange,cumulative_exchange_volume,sign_flip_count,mean_deta,first_exchange_time,link_mass_closure_error
+frontal_basin_fill_fixed_interval_002s,frontal_basin_fill,front_main,frontal_direct,40,7.018238640218127,529.9798290002137,0,0.0,2.0,0.0

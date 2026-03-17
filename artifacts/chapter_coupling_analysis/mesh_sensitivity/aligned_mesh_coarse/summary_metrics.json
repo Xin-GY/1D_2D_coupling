@@ -1,0 +1,22 @@
+{
+  "case_name": "aligned_mesh_coarse",
+  "wall_clock_seconds": 2.63205432810355,
+  "simulated_duration": 120.0,
+  "exchange_count": 2158,
+  "cumulative_exchange_volume": 243.1125873942367,
+  "final_total_mass_error": 12.03134798506369,
+  "max_abs_mass_error": 33.301988914034155,
+  "cumulative_mass_error": 1947.2865011250021,
+  "normalized_mass_error": 0.05755800308008081,
+  "peak_stage_1d": 0.8873558044433594,
+  "peak_stage_2d": 0.8873537192052632,
+  "peak_Q_exchange": 3.776426577313158,
+  "triangle_count": 123,
+  "RMSE_stage_vs_reference": 0.00046664830308989146,
+  "max_abs_stage_diff_vs_reference": 0.0021084010748364523,
+  "arrival_time_diff_vs_reference": -0.026210289620403504,
+  "phase_lag_seconds": 0.0,
+  "peak_stage_error": 0.00014870277842626844,
+  "peak_time_error": 0.0,
+  "hydrograph_NSE": 0.9791179273933369
+}

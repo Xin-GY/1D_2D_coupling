@@ -1,0 +1,2 @@
+case_name,scenario_family,link_id,link_type,exchange_event_count,peak_Q_exchange,cumulative_exchange_volume,sign_flip_count,mean_deta,first_exchange_time,link_mass_closure_error
+lateral_overtopping_return_fixed_interval_002s,lateral_overtopping_return,return_link,lateral_exchange,40,2.3863073127692505,58.307740918129454,0,0.29103768358473286,2.0,0.0

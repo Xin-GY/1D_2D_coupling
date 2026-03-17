@@ -1,0 +1,14 @@
+{
+  "case_name": "aligned_mesh_coarse",
+  "scheduler_mode": "strict_global_min_dt",
+  "exchange_interval": null,
+  "coupling_type": "mixed",
+  "direction": "bidirectional",
+  "waveform": "pulse",
+  "duration": 120.0,
+  "one_d_yields": null,
+  "two_d_yields": null,
+  "analysis_group": "mesh_sensitivity",
+  "mesh_variant": "aligned_mesh_coarse",
+  "reference_case_name": "aligned_mesh_fine"
+}

@@ -1,0 +1,236 @@
+[
+  {
+    "figure_id": "Fig-CTD-01",
+    "script_path": "scripts/plot_coupling_schematic.py",
+    "input_data_paths": "cases/*/config.json",
+    "output_png_path": "plots/coupling_schematic.png",
+    "caption_draft_cn": "图示 frontal、lateral 与 mixed 三类 1D–2D 耦合接口。",
+    "caption_draft_en": "Schematic view of frontal, lateral, and mixed 1D–2D coupling modes.",
+    "chapter_section": "8.1"
+  },
+  {
+    "figure_id": "Fig-CTD-02",
+    "script_path": "scripts/plot_test7_geometry_and_mesh.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/geometry.json; cases/*test7*_strict_global_min_dt/two_d_field_summary.csv",
+    "output_png_path": "plots/test7_geometry_and_mesh.png",
+    "caption_draft_cn": "Test 7 overtopping-only 变体的 1D 河道、2D 洪泛区、分区与网格示意。",
+    "caption_draft_en": "Geometry and mesh for the overtopping-only Test 7 variant, including river, floodplain partitions, and 2D centroids.",
+    "chapter_section": "8.1"
+  },
+  {
+    "figure_id": "Fig-CTD-03",
+    "script_path": "scripts/plot_scheduler_timeline_schematic.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/scheduler_timeline_schematic.png",
+    "caption_draft_cn": "strict、yield 与 fixed-interval 调度的 exchange 时序示意。",
+    "caption_draft_en": "Schematic exchange timelines for strict, yield-schedule, and fixed-interval coupling.",
+    "chapter_section": "8.1"
+  },
+  {
+    "figure_id": "Fig-CTD-04",
+    "script_path": "scripts/plot_stage_hydrographs_1d.py",
+    "input_data_paths": "cases/*test7*/stage_timeseries_1d.csv; summaries/summary_table.csv",
+    "output_png_path": "plots/stage_hydrographs_1d.png",
+    "caption_draft_cn": "大算例代表性 1D 断面的水位过程线比较。",
+    "caption_draft_en": "Comparison of stage hydrographs at representative 1D sections for the benchmark case.",
+    "chapter_section": "8.2"
+  },
+  {
+    "figure_id": "Fig-CTD-05",
+    "script_path": "scripts/plot_discharge_hydrographs_1d.py",
+    "input_data_paths": "cases/*test7*/discharge_timeseries.csv; summaries/summary_table.csv",
+    "output_png_path": "plots/discharge_hydrographs_1d.png",
+    "caption_draft_cn": "大算例代表性 1D 断面的流量过程线比较。",
+    "caption_draft_en": "Comparison of discharge hydrographs at representative 1D sections for the benchmark case.",
+    "chapter_section": "8.2"
+  },
+  {
+    "figure_id": "Fig-CTD-06",
+    "script_path": "scripts/plot_xt_stage_river.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/river_profile_stage.csv",
+    "output_png_path": "plots/xt_stage_river.png",
+    "caption_draft_cn": "沿主河道的 x–t 水位图。",
+    "caption_draft_en": "x–t stage diagram along the benchmark river corridor.",
+    "chapter_section": "8.2"
+  },
+  {
+    "figure_id": "Fig-CTD-07",
+    "script_path": "scripts/plot_xt_discharge_river.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/river_profile_discharge.csv",
+    "output_png_path": "plots/xt_discharge_river.png",
+    "caption_draft_cn": "沿主河道的 x–t 流量图。",
+    "caption_draft_en": "x–t discharge diagram along the benchmark river corridor.",
+    "chapter_section": "8.2"
+  },
+  {
+    "figure_id": "Fig-CTD-08",
+    "script_path": "scripts/plot_exchange_q_timeseries.py",
+    "input_data_paths": "cases/*test7*_fixed_interval_015s/exchange_link_timeseries.csv",
+    "output_png_path": "plots/exchange_q_timeseries.png",
+    "caption_draft_cn": "代表性 links 的交换流量过程线。",
+    "caption_draft_en": "Exchange discharge time series for representative lateral and frontal links.",
+    "chapter_section": "8.3"
+  },
+  {
+    "figure_id": "Fig-CTD-09",
+    "script_path": "scripts/plot_exchange_deta_timeseries.py",
+    "input_data_paths": "cases/*test7*_fixed_interval_015s/exchange_link_timeseries.csv",
+    "output_png_path": "plots/exchange_deta_timeseries.png",
+    "caption_draft_cn": "代表性 links 的水位差过程线。",
+    "caption_draft_en": "Time series of water-level difference across representative exchange links.",
+    "chapter_section": "8.3"
+  },
+  {
+    "figure_id": "Fig-CTD-10",
+    "script_path": "scripts/plot_exchange_volume_cumulative.py",
+    "input_data_paths": "cases/*test7*_fixed_interval_015s/exchange_link_timeseries.csv",
+    "output_png_path": "plots/exchange_volume_cumulative.png",
+    "caption_draft_cn": "累计交换体积曲线。",
+    "caption_draft_en": "Cumulative exchanged-volume curves for representative links.",
+    "chapter_section": "8.3"
+  },
+  {
+    "figure_id": "Fig-CTD-11",
+    "script_path": "scripts/plot_exchange_event_alignment.py",
+    "input_data_paths": "cases/*test7*_fixed_interval_015s/exchange_link_timeseries.csv; cases/*test7*_fixed_interval_015s/crossing_diagnostics.csv",
+    "output_png_path": "plots/exchange_event_alignment.png",
+    "caption_draft_cn": "首次 exchange 与关键到达时刻对齐诊断。",
+    "caption_draft_en": "Diagnostic alignment between the first exchange event and the key arrival threshold crossing.",
+    "chapter_section": "8.3"
+  },
+  {
+    "figure_id": "Fig-CTD-12",
+    "script_path": "scripts/plot_2d_snapshots_depth.py",
+    "input_data_paths": "cases/*test7*/two_d_snapshots.csv",
+    "output_png_path": "plots/2d_snapshots_depth.png",
+    "caption_draft_cn": "关键时刻 2D 水深快照对比。",
+    "caption_draft_en": "Side-by-side 2D depth snapshots at representative times.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-13",
+    "script_path": "scripts/plot_2d_snapshots_velocity.py",
+    "input_data_paths": "cases/*test7*/two_d_snapshots.csv",
+    "output_png_path": "plots/2d_snapshots_velocity.png",
+    "caption_draft_cn": "关键时刻 2D 流速快照对比。",
+    "caption_draft_en": "Side-by-side 2D velocity snapshots at representative times.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-14",
+    "script_path": "scripts/plot_2d_max_depth_map.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/two_d_field_summary.csv",
+    "output_png_path": "plots/2d_max_depth_map.png",
+    "caption_draft_cn": "参考解的最大水深空间分布。",
+    "caption_draft_en": "Maximum-depth map for the benchmark reference solution.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-15",
+    "script_path": "scripts/plot_2d_arrival_time_map.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/two_d_field_summary.csv",
+    "output_png_path": "plots/2d_arrival_time_map.png",
+    "caption_draft_cn": "参考解的到达时间空间分布。",
+    "caption_draft_en": "Arrival-time map for the benchmark reference solution.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-16",
+    "script_path": "scripts/plot_2d_difference_map.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/two_d_field_summary.csv; cases/*test7*_fixed_interval_015s/two_d_field_summary.csv",
+    "output_png_path": "plots/2d_difference_map.png",
+    "caption_draft_cn": "固定交换间隔相对参考解的 2D 差值图。",
+    "caption_draft_en": "2D difference map of a fixed-interval case against the benchmark reference.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-17",
+    "script_path": "scripts/plot_flood_front_overlay.py",
+    "input_data_paths": "cases/*test7*_strict_global_min_dt/two_d_snapshots.csv; cases/*test7*_fixed_interval_015s/two_d_snapshots.csv",
+    "output_png_path": "plots/flood_front_overlay.png",
+    "caption_draft_cn": "不同策略下洪泛前沿线的叠置比较。",
+    "caption_draft_en": "Overlay of flood-front positions for the reference and fixed-interval solutions.",
+    "chapter_section": "8.4"
+  },
+  {
+    "figure_id": "Fig-CTD-18",
+    "script_path": "scripts/plot_rmse_vs_interval.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/rmse_vs_interval.png",
+    "caption_draft_cn": "交换间隔与 1D 水位 RMSE 的关系。",
+    "caption_draft_en": "Relationship between exchange interval and 1D stage RMSE.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-19",
+    "script_path": "scripts/plot_peak_error_vs_interval.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/peak_error_vs_interval.png",
+    "caption_draft_cn": "交换间隔与峰值误差的关系。",
+    "caption_draft_en": "Relationship between exchange interval and peak-stage / peak-discharge errors.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-20",
+    "script_path": "scripts/plot_arrival_time_error_vs_interval.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/arrival_time_error_vs_interval.png",
+    "caption_draft_cn": "交换间隔与到达时间误差的关系。",
+    "caption_draft_en": "Relationship between exchange interval and arrival-time error.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-21",
+    "script_path": "scripts/plot_phase_lag_vs_interval.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/phase_lag_vs_interval.png",
+    "caption_draft_cn": "交换间隔与相位滞后的关系。",
+    "caption_draft_en": "Relationship between exchange interval and phase lag.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-22",
+    "script_path": "scripts/plot_interval_normalized_axes.py",
+    "input_data_paths": "summaries/summary_table.csv",
+    "output_png_path": "plots/interval_normalized_axes.png",
+    "caption_draft_cn": "以 Δt_ex/t_arr_ref 与 Δt_ex/t_rise_ref 为横轴的归一化误差图。",
+    "caption_draft_en": "Normalized error plot using Δt_ex/t_arr_ref and Δt_ex/t_rise_ref as abscissae.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-23",
+    "script_path": "scripts/plot_cost_share_stacked.py",
+    "input_data_paths": "summaries/timing_breakdown.csv",
+    "output_png_path": "plots/cost_share_stacked.png",
+    "caption_draft_cn": "不同策略下的计算成本占比。",
+    "caption_draft_en": "Stacked cost-share breakdown across coupling strategies.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-24",
+    "script_path": "scripts/plot_relative_cost_vs_accuracy.py",
+    "input_data_paths": "summaries/summary_table.csv; summaries/timing_breakdown.csv",
+    "output_png_path": "plots/relative_cost_vs_accuracy.png",
+    "caption_draft_cn": "相对成本指数与误差指标的折中关系。",
+    "caption_draft_en": "Trade-off between relative cost ratio and accuracy indicators.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-25",
+    "script_path": "scripts/plot_floodplain_partition_compare.py",
+    "input_data_paths": "summaries/summary_table_test7_partitions.csv",
+    "output_png_path": "plots/floodplain_partition_compare.png",
+    "caption_draft_cn": "Floodplain 1/2/3 分区误差对比。",
+    "caption_draft_en": "Partition-wise comparison across Floodplain 1, 2, and 3.",
+    "chapter_section": "8.5"
+  },
+  {
+    "figure_id": "Fig-CTD-26",
+    "script_path": "scripts/plot_summary_dashboard.py",
+    "input_data_paths": "summaries/summary_table.csv; summaries/timing_breakdown.csv",
+    "output_png_path": "plots/summary_dashboard.png",
+    "caption_draft_cn": "耦合时间离散分析的总览仪表板。",
+    "caption_draft_en": "Summary dashboard for the coupling time-discretization analysis.",
+    "chapter_section": "8.5"
+  }
+]

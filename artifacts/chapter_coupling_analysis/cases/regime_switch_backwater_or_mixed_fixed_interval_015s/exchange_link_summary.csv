@@ -1,0 +1,4 @@
+case_name,scenario_family,link_id,link_type,exchange_event_count,peak_Q_exchange,cumulative_exchange_volume,sign_flip_count,mean_deta,first_exchange_time,link_mass_closure_error
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,backwater_link,lateral_exchange,7,0.024380584796381388,0.3657087719457208,0,0.08961357554399652,15.0,0.0
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,front_main,frontal_direct,7,5.587884494388738,407.62434973215596,0,0.0,15.0,0.0
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,mixed_return_link,lateral_exchange,7,0.472001863589542,8.567809822192153,0,0.04652957423426745,15.0,0.0

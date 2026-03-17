@@ -1,0 +1,59 @@
+{
+  "case_name": "early_arrival_pulse_fixed_interval_060s",
+  "scenario_family": "early_arrival_pulse",
+  "scheduler_mode": "fixed_interval",
+  "exchange_interval": 60.0,
+  "coupling_type": "mixed",
+  "direction": "river_to_floodplain",
+  "waveform": "early_pulse",
+  "duration": 40.0,
+  "reference_policy": "strict_global_min_dt",
+  "partition_defs": {
+    "arrival_plain": [
+      [
+        21.599999999999998,
+        32.0
+      ],
+      [
+        110.4,
+        32.0
+      ],
+      [
+        110.4,
+        52.0
+      ],
+      [
+        21.599999999999998,
+        52.0
+      ]
+    ]
+  },
+  "probe_defs": {
+    "primary_stage_probe": "mainstem_mid",
+    "primary_discharge_probe": "mainstem_right_q"
+  },
+  "link_probe_ids": [
+    "early_link",
+    "front_main"
+  ],
+  "analysis_raster": {
+    "mode": "centroids"
+  },
+  "case_variant": "mechanism",
+  "data_provenance": {
+    "mode": "synthetic_mechanism"
+  },
+  "runtime_profile": "test",
+  "one_d_yields": [
+    7.199999999999999,
+    16.8,
+    26.400000000000002,
+    35.2
+  ],
+  "two_d_yields": [
+    9.6,
+    20.0,
+    29.6
+  ],
+  "reference_case_name": "early_arrival_pulse_strict_global_min_dt"
+}

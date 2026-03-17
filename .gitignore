@@ -2,7 +2,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
-artifacts/
+artifacts/*
+!artifacts/chapter_coupling_analysis/
+!artifacts/chapter_coupling_analysis/**
 *.log
 *.msh
 .vscode/

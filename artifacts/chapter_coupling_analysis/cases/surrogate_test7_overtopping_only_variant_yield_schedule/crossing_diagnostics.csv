@@ -1,0 +1,3 @@
+series_id,threshold,found_crossing,bracket_t0,bracket_t1,bracket_y0,bracket_y1,crossing_time_interp,peak_value,peak_time
+mainstem_mid_candidate,1.28,True,0.0,0.0,1.28,1.28,0.0,1.28,0.0
+mainstem_mid_reference,1.28,True,0.0,0.0,1.28,1.28,0.0,1.28,0.0

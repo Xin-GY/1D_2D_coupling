@@ -1,0 +1,22 @@
+{
+  "case_name": "rotated_mesh_fine",
+  "wall_clock_seconds": 5.398026213049889,
+  "simulated_duration": 120.0,
+  "exchange_count": 4334,
+  "cumulative_exchange_volume": 243.51828936214847,
+  "final_total_mass_error": 12.060557845875223,
+  "max_abs_mass_error": 33.32915255567019,
+  "cumulative_mass_error": 1952.2705353182105,
+  "normalized_mass_error": 0.057900730194078424,
+  "peak_stage_1d": 0.8873920440673828,
+  "peak_stage_2d": 0.8875066508997569,
+  "peak_Q_exchange": 3.7739067556960935,
+  "triangle_count": 322,
+  "RMSE_stage_vs_reference": 0.0004122693883032221,
+  "max_abs_stage_diff_vs_reference": 0.0019326080531022471,
+  "arrival_time_diff_vs_reference": -0.007428925823676824,
+  "phase_lag_seconds": 0.0,
+  "peak_stage_error": 0.00017058940982161985,
+  "peak_time_error": 0.0,
+  "hydrograph_NSE": 0.9790386026874175
+}

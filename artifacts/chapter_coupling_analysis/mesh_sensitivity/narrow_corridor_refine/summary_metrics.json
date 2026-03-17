@@ -1,0 +1,22 @@
+{
+  "case_name": "narrow_corridor_refine",
+  "wall_clock_seconds": 40.626775403972715,
+  "simulated_duration": 120.0,
+  "exchange_count": 26644,
+  "cumulative_exchange_volume": 243.57680392714792,
+  "final_total_mass_error": 11.058467574148267,
+  "max_abs_mass_error": 33.256988978100765,
+  "cumulative_mass_error": 1932.9445698858121,
+  "normalized_mass_error": 0.057288498513387624,
+  "peak_stage_1d": 0.8848249912261963,
+  "peak_stage_2d": 0.8887662031157858,
+  "peak_Q_exchange": 3.8815583920680536,
+  "triangle_count": 465,
+  "RMSE_stage_vs_reference": 0.007073671010498242,
+  "max_abs_stage_diff_vs_reference": 0.02206227171379238,
+  "arrival_time_diff_vs_reference": 0.08985323562258873,
+  "phase_lag_seconds": 0.0,
+  "peak_stage_error": -0.0024107147896926806,
+  "peak_time_error": 11.0,
+  "hydrograph_NSE": 0.9806339314003719
+}

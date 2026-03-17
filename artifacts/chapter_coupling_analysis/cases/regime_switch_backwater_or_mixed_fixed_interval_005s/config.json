@@ -1,0 +1,78 @@
+{
+  "case_name": "regime_switch_backwater_or_mixed_fixed_interval_005s",
+  "scenario_family": "regime_switch_backwater_or_mixed",
+  "scheduler_mode": "fixed_interval",
+  "exchange_interval": 5.0,
+  "coupling_type": "mixed",
+  "direction": "bidirectional",
+  "waveform": "backwater_mixed",
+  "duration": 100.0,
+  "reference_policy": "strict_global_min_dt",
+  "partition_defs": {
+    "upper_backwater_plain": [
+      [
+        32.0,
+        40.72
+      ],
+      [
+        99.2,
+        40.72
+      ],
+      [
+        99.2,
+        64.0
+      ],
+      [
+        32.0,
+        64.0
+      ]
+    ],
+    "lower_return_plain": [
+      [
+        89.60000000000001,
+        0.0
+      ],
+      [
+        140.8,
+        0.0
+      ],
+      [
+        140.8,
+        22.72
+      ],
+      [
+        89.60000000000001,
+        22.72
+      ]
+    ]
+  },
+  "probe_defs": {
+    "primary_stage_probe": "mainstem_mid",
+    "primary_discharge_probe": "mainstem_right_q"
+  },
+  "link_probe_ids": [
+    "backwater_link",
+    "mixed_return_link",
+    "front_main"
+  ],
+  "analysis_raster": {
+    "mode": "centroids"
+  },
+  "case_variant": "mechanism",
+  "data_provenance": {
+    "mode": "synthetic_mechanism"
+  },
+  "runtime_profile": "test",
+  "one_d_yields": [
+    18.0,
+    42.0,
+    66.0,
+    88.0
+  ],
+  "two_d_yields": [
+    24.0,
+    50.0,
+    74.0
+  ],
+  "reference_case_name": "regime_switch_backwater_or_mixed_strict_global_min_dt"
+}

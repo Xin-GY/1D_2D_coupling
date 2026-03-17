@@ -1,0 +1,4 @@
+case_name,scenario_family,partition,max_depth_map_difference,arrival_time_map_difference,inundated_area_difference,wet_area_iou,wet_area_csi
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,lower_return_plain,0.0025280278964305847,0.0,0.0,1.0,1.0
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,unpartitioned,0.009347244087145823,0.0,0.0,1.0,1.0
+regime_switch_backwater_or_mixed_fixed_interval_015s,regime_switch_backwater_or_mixed,upper_backwater_plain,0.00617800699616633,0.0,0.0,1.0,1.0

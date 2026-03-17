@@ -1,0 +1,22 @@
+{
+  "case_name": "rotated_mesh_coarse",
+  "wall_clock_seconds": 5.379660503938794,
+  "simulated_duration": 120.0,
+  "exchange_count": 4330,
+  "cumulative_exchange_volume": 243.22266574411523,
+  "final_total_mass_error": 12.050721748752494,
+  "max_abs_mass_error": 33.25375266108233,
+  "cumulative_mass_error": 1951.7189485016788,
+  "normalized_mass_error": 0.057833714168756385,
+  "peak_stage_1d": 0.887413740158081,
+  "peak_stage_2d": 0.8870986130664242,
+  "peak_Q_exchange": 3.777354725535122,
+  "triangle_count": 148,
+  "RMSE_stage_vs_reference": 0.0004805787576696171,
+  "max_abs_stage_diff_vs_reference": 0.001695607133946786,
+  "arrival_time_diff_vs_reference": -0.010946815329652804,
+  "phase_lag_seconds": 0.0,
+  "peak_stage_error": 0.0001913193785930689,
+  "peak_time_error": 0.0,
+  "hydrograph_NSE": 0.9776452177568177
+}
