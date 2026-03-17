@@ -97,6 +97,9 @@
 - coupling 主路径中不允许 legacy `apply_inlets_gpu()`。
 - 默认测试不允许 skip-based 逃避。
 - 所有图脚本都必须独立可重跑。
+- 当前 chapter 新的 A/B 结果目录为：
+  - `artifacts/chapter_coupling_analysis_fastest_exact/`
+  - 该目录保留原 chapter 结果不变，同时用 `fastest_exact` 作为默认 1D backend 复跑选定 benchmark / small cases。
 
 ## 2D 论文图渲染与空白图修复
 - 本章所有 2D 区域图现在统一采用：
@@ -153,6 +156,10 @@
   - `artifacts/chapter_coupling_analysis/summaries/summary_table_test7_partitions.csv`
   - `artifacts/chapter_coupling_analysis/summaries/timing_breakdown.csv`
   - `artifacts/chapter_coupling_analysis/summaries/exchange_link_summary.csv`
+- `fastest_exact` A/B 结果对应位于：
+  - `artifacts/chapter_coupling_analysis_fastest_exact/summaries/summary_table.csv`
+  - `artifacts/chapter_coupling_analysis_fastest_exact/summaries/timing_breakdown.csv`
+  - `artifacts/chapter_coupling_analysis_fastest_exact/summaries/one_d_backend_timing.csv`
 - 这些结果会在实验完成后支撑以下结论：
   - 哪些 interval 对 early arrival 最敏感；
   - 哪些 interval 在 peak / phase 上开始明显失真；
@@ -245,3 +252,12 @@
   - boundary updates 减少；
   - exchange manager 调度减少；
   - 而不是 GPU kernel 本身突然更快。
+
+## Fastest-Exact Backend A/B
+- 当前仓库已新增 `fastest_exact_handoff` 作为 chapter/coupling 默认 1D backend。
+- 在 `artifacts/chapter_coupling_analysis_fastest_exact/summaries/one_d_backend_timing.csv` 中，
+  同一 benchmark strict case 的 1D-only 对比结果显示：
+  - `legacy` wall clock 约 `0.166 s`
+  - `fastest_exact` wall clock 约 `0.136 s`
+  - `fastest_exact / legacy ≈ 0.819`
+- 因此，本轮切换至少在当前 test-profile benchmark strict case 上，已经把 1D-only 网络推进时间压低到 legacy 的约 `82%`，同时保持现有 coupling/plotting 工作流不变。

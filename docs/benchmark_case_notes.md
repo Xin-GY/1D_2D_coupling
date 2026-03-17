@@ -21,6 +21,11 @@
   - `download_succeeded = false`
   - `fallback_reason = official_data_not_found_and_download_disabled`
 - 因此本轮论文级内部比较是在 documented surrogate 上完成的，而不是官方 assets 的 silent partial run。
+- 目前仓库同时保留两套 chapter 结果根目录：
+  - `artifacts/chapter_coupling_analysis/`
+    - 原 chapter 基线结果
+  - `artifacts/chapter_coupling_analysis_fastest_exact/`
+    - 切换到 `fastest_exact` 1D backend、并对 figure-driving cases 使用 `refined_figures` mesh preset 的 A/B 结果
 
 ## Official vs Surrogate Naming
 - `official_test7_overtopping_only_variant`
@@ -47,3 +52,26 @@
   - 提供一个接近论文场景的大尺度 overtopping-only 耦合环境；
   - 用于比较 scheduler、fixed interval、partition response、interface diagnostics 与成本占比；
   - 支撑 chapter 中的“时间离散、空间耦合与计算成本占比分析”。
+
+## Fastest-Exact A/B Notes
+- `artifacts/chapter_coupling_analysis_fastest_exact/` 不覆盖原 chapter 基线结果。
+- 新目录只重跑了选定 benchmark / small cases：
+  - benchmark:
+    - `strict_global_min_dt`
+    - `yield_schedule`
+    - `fixed_interval_002s`
+    - `fixed_interval_003s`
+    - `fixed_interval_005s`
+    - `fixed_interval_010s`
+    - `fixed_interval_015s`
+    - `fixed_interval_030s`
+    - `fixed_interval_060s`
+    - `fixed_interval_300s`
+  - small mechanism:
+    - 四个 family 的 strict
+    - `early_arrival_pulse_fixed_interval_005s`
+    - 四个 family 的 `fixed_interval_015s`
+- 所有新图已通过 blank-image QA，2D 图仍保持：
+  - full-mesh face coloring
+  - gray mesh lines
+  - geometry cache redraw

@@ -19,9 +19,19 @@
   - 这样 chapter 子进程不会被不必要的冷编译拖慢。
 
 ## Main Commands
+- Build the `fastest_exact_handoff` extensions:
+```bash
+/home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python fastest_exact_handoff/source/handoff_network_model_20260312/build_cython_cross_section.py build_ext --inplace
+/home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python fastest_exact_handoff/source/handoff_network_model_20260312/build_cython_exact_kernels.py build_ext --inplace
+/home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python fastest_exact_handoff/source/handoff_network_model_20260312/build_cpp_exact_kernels.py build_ext --inplace
+```
 - Chapter total analysis:
 ```bash
 /home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python -m experiments.run_coupling_sweep --suite chapter
+```
+- Fastest-exact chapter A/B refresh:
+```bash
+/home/xin/miniconda3/envs/anuga_GPU_sync_audit/bin/python -m experiments.run_fastest_exact_refresh --profile test --disable-download --output-root artifacts/chapter_coupling_analysis_fastest_exact
 ```
 - Test 7 suite only:
 ```bash
@@ -42,6 +52,11 @@
 - `artifacts/chapter_coupling_analysis/plots/`
 - `artifacts/chapter_coupling_analysis/tables/`
 - `artifacts/chapter_coupling_analysis/logs/`
+- `artifacts/chapter_coupling_analysis_fastest_exact/cases/`
+- `artifacts/chapter_coupling_analysis_fastest_exact/summaries/`
+- `artifacts/chapter_coupling_analysis_fastest_exact/plots/`
+- `artifacts/chapter_coupling_analysis_fastest_exact/tables/`
+- `artifacts/chapter_coupling_analysis_fastest_exact/logs/`
 
 ## Deterministic Policies
 - `strict_global_min_dt` is the reference policy.
@@ -65,6 +80,17 @@
   - local `.msh` only for one-time cache export
   - otherwise fail-fast with a clear geometry-missing error
 - This means a fresh clone can redraw the chapter figures from the tracked artifacts alone, without recovering ignored mesh files.
+
+## Fastest-Exact Backend Notes
+- The default 1D backend for new coupling/chapter runs is now:
+  - `fastest_exact`
+- The legacy backend is still available for A/B timing and regression via:
+  - `--one-d-backend legacy`
+- The backend swap contract is documented in:
+  - `docs/fastest_exact_call_chain_audit.md`
+- The fastest-exact chapter refresh writes an additional timing table:
+  - `artifacts/chapter_coupling_analysis_fastest_exact/summaries/one_d_backend_timing.csv`
+  - This table compares legacy vs fastest-exact on a 1D-only benchmark strict case.
 
 ## Refreshing Chapter Plots Only
 - To refresh chapter figures, manifests, plot QA, and geometry caches without rerunning chapter simulations:
