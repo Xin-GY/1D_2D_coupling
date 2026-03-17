@@ -11,7 +11,7 @@ from .runtime_env import configure_runtime_environment, require_fast_mode
 @dataclass(slots=True)
 class TwoDAnugaGpuAdapter:
     domain: Any
-    multiprocessor_mode: int = 0
+    multiprocessor_mode: int = 4
     time_eps: float = 1.0e-12
     default_inlet_mode: str = 'fast'
     _initialized: bool = False
@@ -42,6 +42,22 @@ class TwoDAnugaGpuAdapter:
             raise KeyError(f'未注册的{kind}: {key!r}')
         return mapping[key]
 
+    def _sync_cpu_height_from_stage(self) -> None:
+        quantities = getattr(self.domain, 'quantities', {})
+        if not {'stage', 'elevation', 'height'}.issubset(set(quantities)):
+            return
+        stage = quantities['stage']
+        bed = quantities['elevation']
+        height = quantities['height']
+        if hasattr(stage, 'centroid_values') and hasattr(bed, 'centroid_values'):
+            height.centroid_values[:] = np.maximum(stage.centroid_values - bed.centroid_values, 0.0)
+        if hasattr(stage, 'vertex_values') and hasattr(bed, 'vertex_values') and hasattr(height, 'vertex_values'):
+            height.vertex_values[:] = np.maximum(stage.vertex_values - bed.vertex_values, 0.0)
+        if hasattr(stage, 'edge_values') and hasattr(bed, 'edge_values') and hasattr(height, 'edge_values'):
+            height.edge_values[:] = np.maximum(stage.edge_values - bed.edge_values, 0.0)
+        if hasattr(stage, 'boundary_values') and hasattr(bed, 'boundary_values') and hasattr(height, 'boundary_values'):
+            height.boundary_values[:] = np.maximum(stage.boundary_values - bed.boundary_values, 0.0)
+
     @staticmethod
     def _quantity_alias(name: str) -> tuple[str, str]:
         mapping = {
@@ -49,6 +65,7 @@ class TwoDAnugaGpuAdapter:
             'height': ('height', 'height'),
             'xmomentum': ('xmomentum', 'xmom'),
             'ymomentum': ('ymomentum', 'ymom'),
+            'elevation': ('elevation', 'bed'),
         }
         if name not in mapping:
             raise KeyError(f'Unsupported quantity alias: {name}')
@@ -56,16 +73,25 @@ class TwoDAnugaGpuAdapter:
 
     def initialize_gpu(self) -> None:
         configure_runtime_environment()
+        if int(self.multiprocessor_mode) != 4:
+            raise ValueError(f'TwoDAnugaGpuAdapter requires multiprocessor_mode=4 for the real GPU path, got {self.multiprocessor_mode}')
         if hasattr(self.domain, 'set_multiprocessor_mode'):
             self.domain.set_multiprocessor_mode(self.multiprocessor_mode)
-        if not hasattr(self.domain, 'gpu_interface'):
+        if getattr(self.domain, 'gpu_interface', None) is None:
             self.domain.set_gpu_interface()
+        if getattr(self.domain, 'gpu_interface', None) is None:
+            raise RuntimeError('ANUGA GPU interface was not created; ensure the real GPU path is active and multiprocessor_mode=4')
         if not hasattr(self.domain, 'relative_time'):
             self.domain.relative_time = 0.0
+        self._sync_cpu_height_from_stage()
         if not self._has_gpu_inlet_manager():
             self.domain.gpu_interface.init_gpu_inlets(default_mode=require_fast_mode(self.default_inlet_mode))
         self._validate_existing_fast_mode()
         self.domain.gpu_interface.init_gpu_boundary_conditions()
+        self.domain.gpu_interface.protect_against_infinitesimal_and_negative_heights_kernal(
+            transfer_from_cpu=True,
+            transfer_gpu_results=False,
+        )
         self._initialized = True
 
     def _ensure_initialized(self) -> None:
@@ -316,6 +342,8 @@ class TwoDAnugaGpuAdapter:
         self._prepared_dt = None
 
     def get_total_volume(self) -> float:
-        height = self._centroid_array('height')
+        stage = self._centroid_array('stage')
+        bed = self._centroid_array('elevation')
+        height = np.maximum(stage - bed, 0.0)
         areas = np.asarray(self.domain.areas, dtype=float)
         return float(np.sum(height * areas))
