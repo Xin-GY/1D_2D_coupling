@@ -86,6 +86,7 @@ def configure_runtime_environment(base_dir: str | os.PathLike[str] | None = None
     # force an NVRTC cold compile on every subprocess launch.
     cupy_cache_dir = Path(os.environ.get('CUPY_CACHE_DIR', Path.home() / '.cupy' / 'kernel_cache'))
     cupy_cache_dir.mkdir(parents=True, exist_ok=True)
+    env_bin = Path(sys.executable).resolve().parent
 
     os.environ['MPLCONFIGDIR'] = str(mpl_dir)
     os.environ['XDG_CACHE_HOME'] = str(cache_dir)
@@ -97,6 +98,10 @@ def configure_runtime_environment(base_dir: str | os.PathLike[str] | None = None
     os.environ['PYTHONPYCACHEPREFIX'] = str(pycache_dir)
     os.environ['ANUGADATA'] = str(anuga_data_dir)
     os.environ['INUNDATIONHOME'] = str(anuga_data_dir)
+    os.environ['PATH'] = os.pathsep.join([str(env_bin), os.environ.get('PATH', '')]).rstrip(os.pathsep)
+    os.environ['NINJA'] = str(env_bin / 'ninja')
+    os.environ['MESON'] = str(env_bin / 'meson')
+    os.environ['CYTHON'] = str(env_bin / 'cython')
 
     old_factory = logging.getLogRecordFactory()
 
