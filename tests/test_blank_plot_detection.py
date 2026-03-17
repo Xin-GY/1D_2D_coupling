@@ -31,3 +31,9 @@ def test_chapter_blank_plot_audit_reports_zero_failures(chapter_analysis_artifac
     audit_rows = read_csv(chapter_analysis_artifacts / 'logs' / 'blank_plot_audit.csv')
     assert audit_rows, 'blank plot audit is missing'
     assert all(str(row['is_approximately_blank']).lower() in {'false', '0'} for row in audit_rows)
+
+
+def test_fastest_exact_blank_plot_audit_reports_zero_failures(fastest_exact_chapter_artifacts: Path):
+    audit_rows = read_csv(fastest_exact_chapter_artifacts / 'logs' / 'blank_plot_audit.csv')
+    assert audit_rows, 'blank plot audit is missing'
+    assert all(str(row['is_approximately_blank']).lower() in {'false', '0'} for row in audit_rows)

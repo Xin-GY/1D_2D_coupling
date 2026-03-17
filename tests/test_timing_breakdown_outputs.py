@@ -68,3 +68,16 @@ def test_chapter_timing_breakdown_contains_expected_columns(chapter_analysis_art
     benchmark_rows = [row for row in rows if 'test7' in row['scenario_family']]
     assert any(row['scheduler_mode'] == 'strict_global_min_dt' for row in read_csv(chapter_analysis_artifacts / 'summaries' / 'summary_table.csv') if 'test7' in row['scenario_family'])
     assert benchmark_rows
+
+
+def test_fastest_exact_chapter_outputs_include_backend_timing_comparison(fastest_exact_chapter_artifacts):
+    timing_rows = read_csv(fastest_exact_chapter_artifacts / 'summaries' / 'timing_breakdown.csv')
+    assert timing_rows
+    assert all({'one_d_backend', 'mesh_variant'}.issubset(row.keys()) for row in timing_rows)
+
+    backend_rows = read_csv(fastest_exact_chapter_artifacts / 'summaries' / 'one_d_backend_timing.csv')
+    assert {row['backend'] for row in backend_rows} == {'legacy', 'fastest_exact'}
+    for row in backend_rows:
+        assert float(row['wall_clock_seconds']) >= 0.0
+        assert float(row['final_time']) > 0.0
+        assert float(row['relative_to_legacy']) >= 0.0

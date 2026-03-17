@@ -42,3 +42,23 @@ def test_chapter_2d_plot_modules_do_not_use_scatter(monkeypatch, chapter_analysi
     ):
         module = importlib.import_module(module_name)
         module.main(chapter_analysis_artifacts)
+
+
+def test_fastest_exact_chapter_2d_plot_modules_do_not_use_scatter(monkeypatch, fastest_exact_chapter_artifacts: Path):
+    import matplotlib.axes
+
+    def _forbid_scatter(*args, **kwargs):  # pragma: no cover - exercised via monkeypatch
+        raise AssertionError('2D mesh rendering should not call Axes.scatter')
+
+    monkeypatch.setattr(matplotlib.axes.Axes, 'scatter', _forbid_scatter)
+    for module_name in (
+        'scripts.plot_test7_geometry_and_mesh',
+        'scripts.plot_2d_snapshots_depth',
+        'scripts.plot_2d_snapshots_velocity',
+        'scripts.plot_2d_max_depth_map',
+        'scripts.plot_2d_arrival_time_map',
+        'scripts.plot_2d_difference_map',
+        'scripts.plot_flood_front_overlay',
+    ):
+        module = importlib.import_module(module_name)
+        module.main(fastest_exact_chapter_artifacts)

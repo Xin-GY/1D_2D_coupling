@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -277,25 +278,35 @@ def _write_root_table(outputs: dict[str, Path], stem: str, rows: list[dict[str, 
     write_json(outputs['root'] / f'{stem}.json', rows)
 
 
-def _run_case_subprocess(case: ChapterExperimentCase, outputs: dict[str, Path], provenance_path: Path, profile: str) -> None:
-    subprocess.run(
-        [
-            sys.executable,
-            '-u',
-            '-m',
-            'experiments.run_single_case',
-            case.case_name,
-            '--registry',
-            'chapter',
-            '--profile',
-            profile,
-            '--chapter-provenance',
-            str(provenance_path),
-            '--output-root',
-            str(outputs['root']),
-        ],
-        check=True,
-    )
+def _run_case_subprocess(
+    case: ChapterExperimentCase,
+    outputs: dict[str, Path],
+    provenance_path: Path,
+    profile: str,
+    *,
+    one_d_backend: str | None = None,
+    mesh_variant: str | None = None,
+) -> None:
+    command = [
+        sys.executable,
+        '-u',
+        '-m',
+        'experiments.run_single_case',
+        case.case_name,
+        '--registry',
+        'chapter',
+        '--profile',
+        profile,
+        '--chapter-provenance',
+        str(provenance_path),
+        '--output-root',
+        str(outputs['root']),
+    ]
+    if one_d_backend is not None:
+        command.extend(['--one-d-backend', one_d_backend])
+    if mesh_variant is not None:
+        command.extend(['--mesh-variant', mesh_variant])
+    subprocess.run(command, check=True)
 
 
 def _timing_row(case: ChapterExperimentCase, case_dir: Path) -> dict[str, Any]:
@@ -311,6 +322,8 @@ def _timing_row(case: ChapterExperimentCase, case_dir: Path) -> dict[str, Any]:
     return {
         'case_name': case.case_name,
         'scenario_family': case.scenario_family,
+        'one_d_backend': case.one_d_backend,
+        'mesh_variant': case.mesh_variant,
         'wall_clock_seconds': wall,
         'one_d_advance_time': one_d,
         'two_d_gpu_kernel_time': two_d,
@@ -507,6 +520,9 @@ def run_chapter_analysis(
     allow_download: bool = True,
     run_mesh: bool = True,
     generate_plots: bool = True,
+    selected_case_names: set[str] | None = None,
+    default_one_d_backend: str | None = None,
+    default_mesh_variant: str | None = None,
 ) -> dict[str, Any]:
     outputs = chapter_dirs(output_root)
     provenance = _default_provenance(outputs['logs'] / 'test7_cache', allow_download=allow_download)
@@ -521,11 +537,35 @@ def run_chapter_analysis(
             _warmup_gpu_cache(outputs, provenance)
         cases.extend(generate_small_mechanism_cases(profile=profile))
 
+    if selected_case_names is not None:
+        cases = [case for case in cases if case.case_name in selected_case_names]
+
+    if default_one_d_backend is not None or default_mesh_variant is not None:
+        overridden_cases: list[ChapterExperimentCase] = []
+        for case in cases:
+            updates: dict[str, Any] = {}
+            if default_one_d_backend is not None:
+                updates['one_d_backend'] = default_one_d_backend
+            if default_mesh_variant is not None:
+                updates['mesh_variant'] = default_mesh_variant
+            overridden_cases.append(replace(case, **updates) if updates else case)
+        cases = overridden_cases
+
     for idx, case in enumerate(cases, start=1):
         print(f'[chapter {idx}/{len(cases)}] running {case.case_name}', flush=True)
-        _run_case_subprocess(case, outputs, provenance_path, profile)
+        _run_case_subprocess(
+            case,
+            outputs,
+            provenance_path,
+            profile,
+            one_d_backend=default_one_d_backend,
+            mesh_variant=default_mesh_variant,
+        )
 
     mesh_rows = _run_mesh_cases(outputs) if run_mesh else []
+    if not run_mesh:
+        _write_table(outputs, 'summary_table_mesh', [])
+        _write_root_table(outputs, 'summary_table_mesh', [])
     tables = _aggregate_chapter_tables(cases, outputs)
     figure_rows = _run_plot_scripts(outputs) if generate_plots else []
     table_rows = _table_manifest_rows(outputs)

@@ -5,6 +5,8 @@ __pycache__/
 artifacts/*
 !artifacts/chapter_coupling_analysis/
 !artifacts/chapter_coupling_analysis/**
+!artifacts/chapter_coupling_analysis_fastest_exact/
+!artifacts/chapter_coupling_analysis_fastest_exact/**
 *.log
 *.msh
 .vscode/

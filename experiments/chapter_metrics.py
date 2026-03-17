@@ -145,6 +145,8 @@ def rebuild_chapter_case_outputs(case_dir: Path, reference_dir: Path | None = No
         'case_name': str(config['case_name']),
         'scenario_family': str(config['scenario_family']),
         'case_variant': str(config['case_variant']),
+        'one_d_backend': str(config.get('one_d_backend', 'legacy')),
+        'mesh_variant': str(config.get('mesh_variant', 'baseline')),
         'scheduler_mode': str(config['scheduler_mode']),
         'exchange_interval': float(config['exchange_interval']) if config['exchange_interval'] is not None else np.nan,
         'reference_policy': str(config['reference_policy']),

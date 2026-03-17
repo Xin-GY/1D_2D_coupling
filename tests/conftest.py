@@ -103,3 +103,26 @@ def fastest_exact_smoke_artifacts(tmp_path_factory: pytest.TempPathFactory) -> P
             cwd=REPO_ROOT,
         )
     return output_root
+
+
+@pytest.fixture(scope='session')
+def fastest_exact_chapter_artifacts(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    output_root = tmp_path_factory.mktemp('fastest_exact_chapter') / 'chapter_coupling_analysis_fastest_exact'
+    source_root = REPO_ROOT / 'artifacts' / 'chapter_coupling_analysis_fastest_exact'
+    if source_root.exists():
+        shutil.copytree(
+            source_root,
+            output_root,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns('*.msh', '*.pyc', '__pycache__'),
+        )
+        return output_root
+    _run_python_module(
+        'experiments.run_fastest_exact_refresh',
+        '--profile',
+        'test',
+        '--disable-download',
+        '--output-root',
+        str(output_root),
+    )
+    return output_root

@@ -94,3 +94,23 @@ def test_chapter_plot_scripts_generate_nonempty_pngs(chapter_analysis_artifacts)
         'regenerated_at',
     }
     assert required_columns.issubset(rows[0].keys())
+
+
+def test_fastest_exact_chapter_plot_outputs_are_nonempty(fastest_exact_chapter_artifacts):
+    plot_dir = fastest_exact_chapter_artifacts / 'plots'
+    required = {
+        '2d_snapshots_depth.png',
+        '2d_snapshots_velocity.png',
+        '2d_max_depth_map.png',
+        '2d_arrival_time_map.png',
+        '2d_difference_map.png',
+        'flood_front_overlay.png',
+        'summary_dashboard.png',
+        'test7_geometry_and_mesh.png',
+    }
+    for png_name in required:
+        png_path = plot_dir / png_name
+        assert png_path.exists(), f'missing {png_name}'
+        assert png_path.stat().st_size > 0, f'{png_name} is empty'
+        audit = blank_image_audit(png_path, is_2d_map=True)
+        assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'
