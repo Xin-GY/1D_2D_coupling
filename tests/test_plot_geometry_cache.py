@@ -31,3 +31,11 @@ def test_plot_geometry_cache_index_covers_chapter_cases(chapter_analysis_artifac
     assert rows
     benchmark_case = _benchmark_case_name(chapter_analysis_artifacts)
     assert any(row['case_name'] == benchmark_case for row in rows)
+
+
+def test_fastest_exact_plot_geometry_cache_supports_rendering_without_msh(fastest_exact_chapter_artifacts: Path):
+    assert not any(fastest_exact_chapter_artifacts.rglob('*.msh')), 'test fixture should not depend on .msh files'
+    case_name = _benchmark_case_name(fastest_exact_chapter_artifacts)
+    geometry = load_mesh_geometry_for_case(fastest_exact_chapter_artifacts, case_name)
+    assert geometry['triangles'].shape[0] > 0
+    assert geometry['vertices'].shape[0] > 0

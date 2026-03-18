@@ -105,6 +105,8 @@ def test_fastest_exact_chapter_plot_outputs_are_nonempty(fastest_exact_chapter_a
         '2d_arrival_time_map.png',
         '2d_difference_map.png',
         'flood_front_overlay.png',
+        'arrival_time_error_vs_interval.png',
+        'interval_normalized_axes.png',
         'summary_dashboard.png',
         'test7_geometry_and_mesh.png',
     }
@@ -112,5 +114,6 @@ def test_fastest_exact_chapter_plot_outputs_are_nonempty(fastest_exact_chapter_a
         png_path = plot_dir / png_name
         assert png_path.exists(), f'missing {png_name}'
         assert png_path.stat().st_size > 0, f'{png_name} is empty'
-        audit = blank_image_audit(png_path, is_2d_map=True)
+        is_2d_map = png_name.startswith('2d_') or png_name in {'flood_front_overlay.png', 'test7_geometry_and_mesh.png'}
+        audit = blank_image_audit(png_path, is_2d_map=is_2d_map)
         assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'
