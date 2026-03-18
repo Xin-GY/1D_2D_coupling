@@ -8,6 +8,10 @@ The goal is to preserve the existing coupling manager contract while switching
 the underlying 1D river-network solver from the legacy `demo` implementation to
 the optimized handoff model.
 
+For the current code-checked, chapter-level call stack with explicit entry
+functions, adapters, artifact writers, and 2D GPU sequencing, see
+`docs/fastest_exact_coupling_call_path.md`.
+
 ## 1. Legacy 1D Solver Call Chain
 
 The current legacy experiment path is:

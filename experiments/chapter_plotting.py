@@ -44,6 +44,46 @@ def _iter_case_dirs(root: Path) -> list[Path]:
     return directories
 
 
+def _figure_manifest_rows(root: Path) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for candidate in (root / 'summaries' / 'figure_manifest.csv', root / 'tables' / 'figure_manifest.csv'):
+        if candidate.exists():
+            rows.extend(read_csv(candidate))
+    return rows
+
+
+def _candidate_plot_dirs(root: Path, manifest_rows: list[dict[str, str]]) -> list[Path]:
+    plot_dirs = {root / 'plots'}
+    for row in manifest_rows:
+        output_png_path = str(row.get('output_png_path', '')).strip()
+        if not output_png_path:
+            continue
+        png_path = root / output_png_path if not Path(output_png_path).is_absolute() else Path(output_png_path)
+        plot_dirs.add(png_path.parent)
+    return sorted(path for path in plot_dirs if path.exists())
+
+
+def collect_plot_audit_rows(root: Path) -> list[dict[str, Any]]:
+    manifest_rows = _figure_manifest_rows(root)
+    rows: list[dict[str, Any]] = []
+    for plot_dir in _candidate_plot_dirs(root, manifest_rows):
+        audit_rows = audit_plot_directory(plot_dir, manifest_rows=manifest_rows, repo_root=Path.cwd())
+        for row in audit_rows:
+            row['root'] = str(root)
+            row['plot_dir'] = str(plot_dir.resolve().relative_to(Path.cwd().resolve()))
+        rows.extend(audit_rows)
+    return rows
+
+
+def write_combined_blank_plot_audit(scan_roots: list[Path], output_root: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for root in scan_roots:
+        rows.extend(collect_plot_audit_rows(root))
+    write_csv(output_root / 'logs' / 'blank_plot_audit_all.csv', rows)
+    write_json(output_root / 'logs' / 'blank_plot_audit_all.json', rows)
+    return rows
+
+
 def export_all_plot_geometry_caches(root: Path) -> list[dict[str, Any]]:
     exported: list[dict[str, Any]] = []
     for case_dir in _iter_case_dirs(root):

@@ -517,6 +517,30 @@ def shared_color_limits(
     return compute_robust_color_limits(merged, symmetric=symmetric)
 
 
+def axis_limits_with_padding(
+    values: Sequence[float] | np.ndarray,
+    *,
+    symmetric: bool = False,
+    relative_pad: float = 0.08,
+    min_pad: float = 1.0e-3,
+) -> tuple[float, float]:
+    finite = assert_finite_range(values, 'axis values')
+    vmin = float(np.min(finite))
+    vmax = float(np.max(finite))
+    if symmetric:
+        bound = max(abs(vmin), abs(vmax))
+        pad = max(bound * float(relative_pad), float(min_pad))
+        if bound <= float(min_pad):
+            return -pad, pad
+        return -(bound + pad), bound + pad
+    span = vmax - vmin
+    if span <= 1.0e-12:
+        pad = max(abs(vmax) * float(relative_pad), float(min_pad))
+        return vmin - pad, vmax + pad
+    pad = max(span * float(relative_pad), float(min_pad))
+    return vmin - pad, vmax + pad
+
+
 def blank_image_audit(
     image_path: Path | str,
     *,
@@ -533,10 +557,44 @@ def blank_image_audit(
     sample = flattened[:: max(1, flattened.shape[0] // 20000)]
     unique_colors = int(np.unique((sample * 255.0).astype(np.uint8), axis=0).shape[0])
     dominant_fraction = float(np.max(np.unique((sample * 255.0).astype(np.uint8), axis=0, return_counts=True)[1]) / sample.shape[0])
+    ys, xs = np.where(~white_mask)
+    if ys.size == 0:
+        interior = array
+    else:
+        y0, y1 = int(ys.min()), int(ys.max())
+        x0, x1 = int(xs.min()), int(xs.max())
+        box_h = max(y1 - y0 + 1, 1)
+        box_w = max(x1 - x0 + 1, 1)
+        pad_y = max(int(box_h * 0.08), 4)
+        pad_x = max(int(box_w * 0.08), 4)
+        iy0 = min(max(y0 + pad_y, 0), array.shape[0] - 1)
+        iy1 = max(min(y1 - pad_y, array.shape[0] - 1), iy0)
+        ix0 = min(max(x0 + pad_x, 0), array.shape[1] - 1)
+        ix1 = max(min(x1 - pad_x, array.shape[1] - 1), ix0)
+        interior = array[iy0 : iy1 + 1, ix0 : ix1 + 1]
+    interior_nonwhite = np.any(interior < 0.985, axis=2)
+    interior_ratio = float(interior_nonwhite.mean()) if interior_nonwhite.size else 0.0
+    interior_variance = float(interior.var()) if interior.size else 0.0
+    interior_rgb = interior.reshape(-1, 3)
+    rg = interior_rgb[:, 0] - interior_rgb[:, 1]
+    yb = 0.5 * (interior_rgb[:, 0] + interior_rgb[:, 1]) - interior_rgb[:, 2]
+    interior_colorfulness = float(np.sqrt(np.var(rg) + np.var(yb))) if interior_rgb.size else 0.0
+    blank = bool(
+        (nonwhite_ratio < 0.0015 and variance < 0.0004)
+        or (unique_colors <= 2 and dominant_fraction > 0.995 and variance < 0.0004)
+    )
     near_blank = bool(
-        (nonwhite_ratio < 0.008 and variance < 0.0015)
-        or (is_2d_map and nonwhite_ratio < 0.12 and variance < 0.04)
-        or (unique_colors <= 3 and variance < 0.0015)
+        not blank
+        and (
+            (nonwhite_ratio < 0.008 and variance < 0.0015)
+            or (is_2d_map and nonwhite_ratio < 0.12 and variance < 0.04)
+            or (unique_colors <= 3 and variance < 0.0015)
+            or (
+                interior_ratio < 0.03
+                and interior_variance < 0.007
+                and interior_colorfulness < 0.005
+            )
+        )
     )
     manifest_entry = ''
     if manifest_row is not None:
@@ -548,20 +606,70 @@ def blank_image_audit(
         'height_px': int(image.size[1]),
         'pixel_variance': variance,
         'nonwhite_ratio': nonwhite_ratio,
+        'interior_nonwhite_ratio': interior_ratio,
+        'interior_pixel_variance': interior_variance,
+        'interior_colorfulness': interior_colorfulness,
         'dominant_color_fraction': dominant_fraction,
         'unique_color_count_sampled': unique_colors,
-        'is_approximately_blank': near_blank,
+        'is_blank': bool(blank),
+        'is_near_blank': bool(near_blank),
+        'blank_level': 'blank' if blank else 'near_blank' if near_blank else 'ok',
+        'is_approximately_blank': bool(blank or near_blank),
         'is_2d_map': bool(is_2d_map),
         'figure_manifest_id': manifest_entry,
     }
+
+
+def plot_category_for_file(file_name: str, *, is_2d_map: bool = False) -> str:
+    name = str(file_name)
+    if is_2d_map or name.startswith('2d_') or name in {'flood_front_overlay.png', 'test7_geometry_and_mesh.png'}:
+        return '2d_map'
+    if 'dashboard' in name:
+        return 'dashboard'
+    if any(
+        token in name
+        for token in (
+            'hydrograph',
+            'stage',
+            'discharge',
+            'exchange',
+            'arrival',
+            'rmse',
+            'runtime',
+            'cost',
+            'interval',
+            'phase',
+        )
+    ):
+        return 'hydrograph'
+    return 'other'
+
+
+def _case_name_hint_from_manifest_row(manifest_row: Mapping[str, str] | None) -> str:
+    if manifest_row is None:
+        return ''
+    input_paths = str(manifest_row.get('input_data_paths', '')).strip()
+    if not input_paths:
+        return ''
+    for chunk in input_paths.split(';'):
+        chunk = chunk.strip()
+        if 'cases/' not in chunk:
+            continue
+        tail = chunk.split('cases/', 1)[1]
+        case_hint = tail.split('/', 1)[0].strip()
+        if case_hint:
+            return case_hint
+    return ''
 
 
 def audit_plot_directory(
     plot_dir: Path | str,
     *,
     manifest_rows: Sequence[Mapping[str, str]] | None = None,
+    repo_root: Path | str | None = None,
 ) -> list[dict[str, Any]]:
     directory = Path(plot_dir)
+    resolved_repo_root = Path(repo_root) if repo_root is not None else None
     manifest_map: dict[str, Mapping[str, str]] = {}
     if manifest_rows is not None:
         manifest_map = {
@@ -574,7 +682,17 @@ def audit_plot_directory(
             continue
         manifest_row = manifest_map.get(path.name)
         is_2d_map = path.name.startswith('2d_') or path.name == 'test7_geometry_and_mesh.png' or path.name == 'flood_front_overlay.png'
-        rows.append(blank_image_audit(path, is_2d_map=is_2d_map, manifest_row=manifest_row))
+        audit = blank_image_audit(path, is_2d_map=is_2d_map, manifest_row=manifest_row)
+        audit['plot_category'] = plot_category_for_file(path.name, is_2d_map=is_2d_map)
+        audit['script_path'] = str(manifest_row.get('script_path', '')) if manifest_row is not None else ''
+        audit['case_name_hint'] = _case_name_hint_from_manifest_row(manifest_row)
+        audit['render_mode'] = str(manifest_row.get('render_mode', '')) if manifest_row is not None else ''
+        audit['output_png_path'] = str(manifest_row.get('output_png_path', '')) if manifest_row is not None else ''
+        if resolved_repo_root is not None:
+            audit['relative_path'] = str(path.resolve().relative_to(resolved_repo_root.resolve()))
+        else:
+            audit['relative_path'] = str(path)
+        rows.append(audit)
     return rows
 
 
