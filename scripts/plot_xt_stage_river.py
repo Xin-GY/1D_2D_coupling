@@ -33,9 +33,10 @@ def main(root: Path | str | None = None) -> None:
     times, xs, grid = _pivot(rows, 'stage')
     fig, ax = plt.subplots(figsize=(9, 4.5))
     mesh = ax.pcolormesh(xs, times, grid, shading='auto')
-    fig.colorbar(mesh, ax=ax, label='stage')
-    ax.set_xlabel('x')
-    ax.set_ylabel('time')
+    fig.colorbar(mesh, ax=ax, label='水位 (m)')
+    ax.set_title('河道水位 x-t 分布图')
+    ax.set_xlabel('河道纵向位置 x')
+    ax.set_ylabel('时间 (s)')
     save_figure(fig, plot_dir / 'xt_stage_river.png')
 
 

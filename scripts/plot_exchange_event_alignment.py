@@ -24,12 +24,13 @@ def main(root: Path | str | None = None) -> None:
     fig, ax = plt.subplots(figsize=(9, 3.8))
     for time_value in times:
         ax.axvline(time_value, color='#355070', alpha=0.25)
-    ax.axvline(float(ref_cross['crossing_time_interp']), color='#d62828', lw=2, label='reference arrival')
-    ax.axvline(float(candidate_cross['crossing_time_interp']), color='#2a9d8f', lw=2, label='candidate arrival')
+    ax.axvline(float(ref_cross['crossing_time_interp']), color='#d62828', lw=2, label='参考到达时刻')
+    ax.axvline(float(candidate_cross['crossing_time_interp']), color='#2a9d8f', lw=2, label='候选工况到达时刻')
     ax.set_ylim(0.0, 1.0)
     ax.set_yticks([])
+    ax.set_title('交换事件与到达时刻对齐关系')
     ax.legend()
-    ax.set_xlabel('time')
+    ax.set_xlabel('时间 (s)')
     save_figure(fig, plot_dir / 'exchange_event_alignment.png')
 
 

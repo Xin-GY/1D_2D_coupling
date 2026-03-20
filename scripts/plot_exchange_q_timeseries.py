@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure, series_from_rows
+from scripts._plot_common import chapter_case_rows, ensure_plot_dir, link_label, load_chapter_summary_rows, plt, save_figure, series_from_rows
 
 
 LINKS = ['fp1_overtop', 'fp2_return', 'front_main']
@@ -23,10 +23,11 @@ def main(root: Path | str | None = None) -> None:
     fig, axes = plt.subplots(len(LINKS), 1, figsize=(9, 7), sharex=True)
     for ax, link_id in zip(axes, LINKS):
         x, y = series_from_rows(rows, 'time', 'Q_exchange', filter_key='link_id', filter_value=link_id)
-        ax.plot(x, y, label=link_id)
-        ax.set_ylabel(link_id)
+        ax.plot(x, y, label=link_label(link_id))
+        ax.set_ylabel(f'{link_label(link_id)}\n交换流量')
         ax.legend(loc='upper right', fontsize=8)
-    axes[-1].set_xlabel('time')
+    axes[0].set_title('代表性界面交换流量时序')
+    axes[-1].set_xlabel('时间 (s)')
     save_figure(fig, plot_dir / 'exchange_q_timeseries.png')
 
 

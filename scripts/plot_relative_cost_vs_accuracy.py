@@ -24,8 +24,9 @@ def main(root: Path | str | None = None) -> None:
         cmap='viridis',
         s=60,
     )
-    ax.set_xlabel('relative cost ratio')
-    ax.set_ylabel('stage RMSE')
+    ax.set_title('相对成本与精度关系')
+    ax.set_xlabel('相对成本比')
+    ax.set_ylabel('水位 RMSE')
     save_figure(fig, ensure_plot_dir(root) / 'relative_cost_vs_accuracy.png')
 
 

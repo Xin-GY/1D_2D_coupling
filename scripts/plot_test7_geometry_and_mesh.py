@@ -8,9 +8,12 @@ from scripts._plot_common import (
     chapter_case_json,
     draw_mesh_outline,
     ensure_plot_dir,
+    family_label,
     load_chapter_summary_rows,
     load_mesh_geometry_for_case,
+    partition_label,
     plt,
+    probe_label,
     save_figure,
 )
 
@@ -38,13 +41,14 @@ def main(root: Path | str | None = None) -> None:
     fig, ax = plt.subplots(figsize=(11.5, 5.4))
     draw_mesh_outline(ax, mesh_geometry, facecolor='#fbfbfb', edgecolor='0.72', linewidth=0.18, alpha=1.0)
     floodplain = geometry['floodplain_polygon'] + [geometry['floodplain_polygon'][0]]
-    ax.plot([p[0] for p in floodplain], [p[1] for p in floodplain], color='black', lw=2, label='Floodplain boundary')
+    ax.plot([p[0] for p in floodplain], [p[1] for p in floodplain], color='black', lw=2, label='洪泛区边界')
     centerline = geometry['centerline']
-    ax.plot([p[0] for p in centerline], [p[1] for p in centerline], color='#355070', lw=3, label='1D river')
+    ax.plot([p[0] for p in centerline], [p[1] for p in centerline], color='#355070', lw=3, label='一维主河道')
     for name, line in geometry['lateral_lines'].items():
-        ax.plot([p[0] for p in line], [p[1] for p in line], lw=3, label=name.replace('_', ' '))
+        chinese_label = '侧向漫顶界面' if 'overtop' in name else '侧向回流界面'
+        ax.plot([p[0] for p in line], [p[1] for p in line], lw=3, label=chinese_label)
     for line in geometry['direct_connection_lines'].values():
-        ax.plot([p[0] for p in line], [p[1] for p in line], color='#7b2cbf', lw=3, label='frontal link')
+        ax.plot([p[0] for p in line], [p[1] for p in line], color='#7b2cbf', lw=3, label='端部直连接口')
     partition_offsets = {
         'Floodplain_1': (-0.04 * x_span, 0.12 * y_span),
         'Floodplain_2': (0.0, -0.15 * y_span),
@@ -57,7 +61,7 @@ def main(root: Path | str | None = None) -> None:
         ax.text(
             centroid_x + dx,
             centroid_y + dy,
-            name.replace('_', ' '),
+            partition_label(name),
             ha='center',
             va='center',
             fontsize=9,
@@ -74,7 +78,7 @@ def main(root: Path | str | None = None) -> None:
         ax.plot([x_pos], [y_pos], marker='^', color='black', markersize=7, linestyle='none')
         dx, dy = one_d_offsets.get(probe['probe_id'], (0.0, 0.07 * y_span))
         ax.annotate(
-            probe['probe_id'],
+            probe_label(probe['probe_id']),
             xy=(x_pos, y_pos),
             xytext=(x_pos + dx, y_pos + dy),
             textcoords='data',
@@ -95,7 +99,7 @@ def main(root: Path | str | None = None) -> None:
         ax.plot([cx], [cy], marker='o', color='#d62828', markersize=6, linestyle='none')
         dx, dy = two_d_offsets.get(probe['probe_id'], (0.0, 0.08 * y_span))
         ax.annotate(
-            probe['probe_id'],
+            probe_label(probe['probe_id']),
             xy=(cx, cy),
             xytext=(cx + dx, cy + dy),
             textcoords='data',
@@ -105,9 +109,9 @@ def main(root: Path | str | None = None) -> None:
             bbox={'facecolor': 'white', 'edgecolor': '0.8', 'alpha': 0.94, 'pad': 1.8},
             arrowprops={'arrowstyle': '-', 'color': '0.45', 'lw': 0.8},
         )
-    ax.set_title(f'{family} geometry / mesh')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.set_title(f'{family_label(family)}几何与网格')
+    ax.set_xlabel('x 坐标')
+    ax.set_ylabel('y 坐标')
     handles, labels = ax.get_legend_handles_labels()
     unique = dict(zip(labels, handles))
     ax.legend(

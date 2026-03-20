@@ -9,6 +9,7 @@ from scripts._plot_common import (
     assert_nonempty_dataframe,
     assert_required_columns,
     build_snapshot_value_array,
+    case_label,
     chapter_case_rows,
     ensure_plot_dir,
     load_chapter_summary_rows,
@@ -43,6 +44,15 @@ def _plot_union_boundary(ax, union_geometry, *, color: str, linestyle: str, line
         label_pending = ''
 
 
+def _snapshot_label(snapshot_id: str) -> str:
+    mapping = {
+        'snapshot_1': '时刻 1',
+        'snapshot_2': '时刻 2',
+        'snapshot_3': '时刻 3',
+    }
+    return mapping.get(snapshot_id, snapshot_id)
+
+
 def main(root: Path | str | None = None) -> None:
     root = Path('artifacts/chapter_coupling_analysis') if root is None else Path(root)
     plot_dir = ensure_plot_dir(root)
@@ -68,7 +78,7 @@ def main(root: Path | str | None = None) -> None:
         geometry,
         background_values,
         cmap='Blues',
-        label='Flood-front overlay on reference depth background',
+        label='参考解水深背景上的洪水前沿叠置',
     )
     for snapshot_id, color in [('snapshot_1', '#355070'), ('snapshot_2', '#6d597a'), ('snapshot_3', '#b56576')]:
         ref_values = build_snapshot_value_array(
@@ -89,7 +99,7 @@ def main(root: Path | str | None = None) -> None:
             color=color,
             linestyle='-',
             linewidth=1.1,
-            label=f'{snapshot_id} ref',
+            label=f'{_snapshot_label(snapshot_id)} 参考解',
         )
         _plot_union_boundary(
             ax,
@@ -97,7 +107,7 @@ def main(root: Path | str | None = None) -> None:
             color=color,
             linestyle='--',
             linewidth=1.1,
-            label=f'{snapshot_id} 15s',
+            label=f'{_snapshot_label(snapshot_id)} {case_label("fixed_interval_015s")}',
         )
     ax.legend(ncol=3, fontsize=7)
     save_figure(fig, plot_dir / 'flood_front_overlay.png')

@@ -28,6 +28,99 @@ from PIL import Image
 from scipy.io import netcdf_file
 
 
+matplotlib.rcParams['font.sans-serif'] = [
+    'SimHei',
+    'Microsoft YaHei',
+    'WenQuanYi Zen Hei',
+    'Noto Sans CJK SC',
+    'DejaVu Sans',
+]
+matplotlib.rcParams['axes.unicode_minus'] = False
+
+
+CASE_LABELS = {
+    'strict_global_min_dt': '严格全局最小步长',
+    'yield_schedule': 'Yield 时刻表',
+    'fixed_interval_000p5s': '固定间隔 0.5 s',
+    'fixed_interval_001s': '固定间隔 1 s',
+    'fixed_interval_002s': '固定间隔 2 s',
+    'fixed_interval_003s': '固定间隔 3 s',
+    'fixed_interval_005s': '固定间隔 5 s',
+    'fixed_interval_007p5s': '固定间隔 7.5 s',
+    'fixed_interval_010s': '固定间隔 10 s',
+    'fixed_interval_015s': '固定间隔 15 s',
+    'fixed_interval_020s': '固定间隔 20 s',
+    'fixed_interval_030s': '固定间隔 30 s',
+    'fixed_interval_060s': '固定间隔 60 s',
+    'fixed_interval_120s': '固定间隔 120 s',
+    'fixed_interval_300s': '固定间隔 300 s',
+}
+
+PROBE_LABELS = {
+    'upstream_1d': '上游断面',
+    'mainstem_mid': '中游断面',
+    'downstream_1d': '下游断面',
+    'fp1_probe': '洪泛区 1 测点',
+    'fp2_probe': '洪泛区 2 测点',
+    'fp3_probe': '洪泛区 3 测点',
+    'mainstem_left_q': '主河道左端流量',
+    'mainstem_right_q': '主河道右端流量',
+}
+
+LINK_LABELS = {
+    'fp1_overtop': '洪泛区 1 漫顶界面',
+    'fp2_return': '洪泛区 2 回流界面',
+    'fp3_overtop': '洪泛区 3 漫顶界面',
+    'front_main': '主河道直连接口',
+    'return_link': '回流界面',
+    'early_link': '早到达侧向界面',
+    'backwater_link': '回水界面',
+    'mixed_return_link': '混合回流界面',
+}
+
+PARTITION_LABELS = {
+    'Floodplain_1': '洪泛区 1',
+    'Floodplain_2': '洪泛区 2',
+    'Floodplain_3': '洪泛区 3',
+}
+
+FAMILY_LABELS = {
+    'surrogate_test7_overtopping_only_variant': '替代 Test 7 漫顶交换算例',
+    'official_test7_overtopping_only_variant': '官方 Test 7 漫顶交换算例',
+    'frontal_basin_fill': '端部直连蓄盆充水算例',
+    'lateral_overtopping_return': '侧向漫顶-回流算例',
+    'early_arrival_pulse': '早到达脉冲算例',
+    'regime_switch_backwater_or_mixed': '回水/流态切换混合算例',
+}
+
+
+def case_label(label: str) -> str:
+    return CASE_LABELS.get(label, label.replace('_', ' '))
+
+
+def probe_label(label: str) -> str:
+    return PROBE_LABELS.get(label, label.replace('_', ' '))
+
+
+def link_label(label: str) -> str:
+    return LINK_LABELS.get(label, label.replace('_', ' '))
+
+
+def partition_label(label: str) -> str:
+    return PARTITION_LABELS.get(label, label.replace('_', ' '))
+
+
+def family_label(label: str) -> str:
+    return FAMILY_LABELS.get(label, label.replace('_', ' '))
+
+
+def case_name_to_display(case_name: str) -> str:
+    for suffix in sorted(CASE_LABELS, key=len, reverse=True):
+        if case_name.endswith(suffix):
+            return CASE_LABELS[suffix]
+    return case_name.replace('_', ' ')
+
+
 def load_csv_rows(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
@@ -111,8 +204,8 @@ def interval_seconds(case_name: str) -> float:
 def interval_label(case_name: str) -> str:
     seconds = interval_seconds(case_name)
     if abs(seconds - round(seconds)) <= 1.0e-12:
-        return f'{int(round(seconds))}s'
-    return f'{seconds:g}s'
+        return f'{int(round(seconds))} 秒'
+    return f'{seconds:g} 秒'
 
 
 def fixed_interval_rows(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
@@ -473,8 +566,8 @@ def render_scalar_field_on_mesh(
     ax.set_xlim(float(bounds[0]), float(bounds[1]))
     ax.set_ylim(float(bounds[2]), float(bounds[3]))
     ax.set_aspect('equal', adjustable='box')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.set_xlabel('x 坐标')
+    ax.set_ylabel('y 坐标')
     if label is not None:
         ax.set_title(label)
     return mappable

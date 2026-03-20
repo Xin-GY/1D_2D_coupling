@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts._plot_common import chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure, series_from_rows
+from scripts._plot_common import case_label, chapter_case_rows, ensure_plot_dir, load_chapter_summary_rows, plt, save_figure, series_from_rows
 
 
 CASE_SUFFIXES = ['strict_global_min_dt', 'yield_schedule', 'fixed_interval_002s', 'fixed_interval_003s', 'fixed_interval_005s', 'fixed_interval_010s', 'fixed_interval_015s', 'fixed_interval_030s', 'fixed_interval_060s', 'fixed_interval_300s']
@@ -25,9 +25,10 @@ def main(root: Path | str | None = None) -> None:
         case_name = f'{family}_{suffix}'
         rows = chapter_case_rows(root, case_name, 'discharge_timeseries.csv')
         x, y = series_from_rows(rows, 'time', 'discharge', filter_key='series_id', filter_value='mainstem_right_q')
-        ax.plot(x, y, label=suffix.replace('fixed_interval_', ''))
-    ax.set_xlabel('time')
-    ax.set_ylabel('Q')
+        ax.plot(x, y, label=case_label(suffix))
+    ax.set_title('一维主河道出口流量过程线对比')
+    ax.set_xlabel('时间 (s)')
+    ax.set_ylabel('流量 (m$^3$/s)')
     ax.legend(ncol=5, fontsize=7)
     save_figure(fig, plot_dir / 'discharge_hydrographs_1d.png')
 

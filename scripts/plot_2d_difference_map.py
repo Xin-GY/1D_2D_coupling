@@ -46,9 +46,9 @@ def main(root: Path | str | None = None) -> None:
         diff_values,
         cmap='coolwarm',
         symmetric=True,
-        label='15 s minus strict max depth',
+        label='固定间隔 15 秒相对参考解的最大水深差值',
     )
-    fig.colorbar(sc, ax=ax, label='max depth difference (m)')
+    fig.colorbar(sc, ax=ax, label='最大水深差值 (m)')
     save_figure(fig, plot_dir / '2d_difference_map.png')
 
 

@@ -34,8 +34,8 @@ def main(root: Path | str | None = None) -> None:
     geometry = load_mesh_geometry_for_case(root, case_name)
     values = build_cell_value_array(rows, 'arrival_time', expected_cells=int(geometry['triangles'].shape[0]))
     fig, ax = plt.subplots(figsize=(10, 4.5))
-    sc = render_scalar_field_on_mesh(ax, geometry, values, cmap='plasma', label='Reference arrival time')
-    fig.colorbar(sc, ax=ax, label='arrival time (s)')
+    sc = render_scalar_field_on_mesh(ax, geometry, values, cmap='plasma', label='参考解到达时间分布')
+    fig.colorbar(sc, ax=ax, label='到达时间 (s)')
     save_figure(fig, plot_dir / '2d_arrival_time_map.png')
 
 

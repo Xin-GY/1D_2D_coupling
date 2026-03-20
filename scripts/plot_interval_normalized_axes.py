@@ -76,7 +76,7 @@ def _normalized_axis_fallback(root: Path, family: str) -> tuple[list[float], lis
         interval = float(row['exchange_interval'])
         arr_values.append(interval / arr_ref if math.isfinite(arr_ref) and arr_ref > 1.0e-12 else float('nan'))
         rise_values.append(interval / rise_ref if math.isfinite(rise_ref) and rise_ref > 1.0e-12 else float('nan'))
-    return arr_values, rise_values, f'{primary_q}_discharge_fallback'
+    return arr_values, rise_values, '参考流量过程回算'
 
 
 def main(root: Path | str | None = None) -> None:
@@ -109,11 +109,11 @@ def main(root: Path | str | None = None) -> None:
     axes[0].axhline(0.0, color='0.55', linewidth=1.0, linestyle='--', zorder=0)
     axes[0].set_ylim(*axis_limits_with_padding(y_arr + y_peak, symmetric=False, min_pad=0.15))
     axes[0].set_xlabel('Δt_ex / t_arr_ref')
-    axes[0].set_ylabel('arrival error')
+    axes[0].set_ylabel('到达时间误差 (s)')
     axes[0].grid(True, alpha=0.25)
     if max(y_arr) - min(y_arr) <= 1.0e-12:
         axes[0].annotate(
-            f'constant {y_arr[0]:.3f} s',
+            f'当前序列恒为 {y_arr[0]:.3f} s',
             xy=(x_arr[-1], y_arr[-1]),
             xytext=(-6, 10),
             textcoords='offset points',
@@ -125,7 +125,7 @@ def main(root: Path | str | None = None) -> None:
         axes[0].text(
             0.03,
             0.96,
-            f'x from {normalized_source}',
+            f'x 轴来源：{normalized_source}',
             transform=axes[0].transAxes,
             ha='left',
             va='top',
@@ -146,11 +146,11 @@ def main(root: Path | str | None = None) -> None:
     )
     axes[1].axhline(0.0, color='0.55', linewidth=1.0, linestyle='--', zorder=0)
     axes[1].set_xlabel('Δt_ex / t_rise_ref')
-    axes[1].set_ylabel('peak stage error')
+    axes[1].set_ylabel('峰值水位误差 (m)')
     axes[1].grid(True, alpha=0.25)
     if max(y_peak) - min(y_peak) <= 1.0e-12:
         axes[1].annotate(
-            f'constant {y_peak[0]:.3f} m',
+            f'当前序列恒为 {y_peak[0]:.3f} m',
             xy=(x_peak[-1], y_peak[-1]),
             xytext=(-6, 10),
             textcoords='offset points',
@@ -162,7 +162,7 @@ def main(root: Path | str | None = None) -> None:
         axes[1].text(
             0.03,
             0.96,
-            f'x from {normalized_source}',
+            f'x 轴来源：{normalized_source}',
             transform=axes[1].transAxes,
             ha='left',
             va='top',

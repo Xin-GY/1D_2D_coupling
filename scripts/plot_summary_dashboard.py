@@ -44,16 +44,16 @@ def main(root: Path | str = Path('artifacts') / 'coupling_sweep') -> None:
     axes = axes.ravel()
 
     axes[0].bar(labels, rmse_values)
-    axes[0].set_title('RMSE')
+    axes[0].set_title('均方根误差')
 
     axes[1].bar(labels, runtime_values, color='#76b7b2')
-    axes[1].set_title('Runtime')
+    axes[1].set_title('运行时间')
 
     axes[2].bar(labels, mass_values, color='#e15759')
-    axes[2].set_title('Final Mass Error')
+    axes[2].set_title('最终质量误差')
 
     axes[3].bar(labels, phase_values, color='#59a14f')
-    axes[3].set_title('Phase Lag')
+    axes[3].set_title('相位偏差')
 
     for ax in axes:
         ax.tick_params(axis='x', rotation=45)

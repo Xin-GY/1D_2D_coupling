@@ -34,8 +34,8 @@ def main(root: Path | str = Path('artifacts') / 'coupling_sweep') -> None:
     labels = [interval_label(row['case_name']) for row in rows]
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.bar(labels, values, color='#4e79a7')
-    ax.set_title('RMSE vs Exchange Interval')
-    ax.set_xlabel('Interval')
+    ax.set_title('均方根误差与交换间隔关系')
+    ax.set_xlabel('交换间隔')
     ax.set_ylabel('RMSE')
     ax.grid(True, alpha=0.3, axis='y')
     save_figure(fig, ensure_plot_dir(root) / 'rmse_vs_interval.png')

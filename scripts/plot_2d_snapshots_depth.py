@@ -6,6 +6,7 @@ from scripts._plot_common import (
     assert_nonempty_dataframe,
     assert_required_columns,
     build_snapshot_value_array,
+    case_label,
     chapter_case_rows,
     ensure_plot_dir,
     load_chapter_summary_rows,
@@ -59,9 +60,10 @@ def main(root: Path | str | None = None) -> None:
             values,
             cmap='Blues',
             limits=limits,
-            label=f"{suffix.replace('fixed_interval_', '')} | t={snapshot_time:.1f}s",
+            label=f"{case_label(suffix)} | t={snapshot_time:.1f} s",
         )
-    fig.colorbar(sc, ax=axes.ravel().tolist(), label='depth (m)')
+    fig.suptitle('典型时刻二维水深分布对比', fontsize=14)
+    fig.colorbar(sc, ax=axes.ravel().tolist(), label='水深 (m)')
     save_figure(fig, plot_dir / '2d_snapshots_depth.png')
 
 

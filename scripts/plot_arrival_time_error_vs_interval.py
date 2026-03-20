@@ -48,12 +48,12 @@ def main(root: Path | str = Path('artifacts') / 'coupling_sweep') -> None:
     ax.axhline(0.0, color='0.55', linewidth=1.0, linestyle='--', zorder=0)
     ax.set_xticks(x, labels)
     ax.set_ylim(*axis_limits_with_padding(values, min_pad=0.25))
-    ax.set_title('Arrival Time Error vs Exchange Interval')
-    ax.set_xlabel('Interval')
-    ax.set_ylabel('Arrival Time Difference (s)')
+    ax.set_title('到达时间误差与交换间隔关系')
+    ax.set_xlabel('交换间隔')
+    ax.set_ylabel('到达时间差 (s)')
     if max(values) - min(values) <= 1.0e-12:
         ax.annotate(
-            f'benchmark series collapses to {values[0]:.3f} s',
+            f'当前序列均为 {values[0]:.3f} s',
             xy=(x[-1] if x else 0, values[-1] if values else 0.0),
             xytext=(-8, 12),
             textcoords='offset points',

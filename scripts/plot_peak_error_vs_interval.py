@@ -21,9 +21,12 @@ def main(root: Path | str | None = None) -> None:
     discharge_values = [float(row['peak_discharge_error']) for row in interval_rows]
     fig, ax = plt.subplots(figsize=(10, 5))
     x = range(len(labels))
-    ax.bar([idx - 0.18 for idx in x], stage_values, width=0.36, label='peak stage error')
-    ax.bar([idx + 0.18 for idx in x], discharge_values, width=0.36, label='peak discharge error', color='#e76f51')
+    ax.bar([idx - 0.18 for idx in x], stage_values, width=0.36, label='峰值水位误差')
+    ax.bar([idx + 0.18 for idx in x], discharge_values, width=0.36, label='峰值流量误差', color='#e76f51')
     ax.set_xticks(list(x), labels, rotation=45)
+    ax.set_title('峰值误差与交换间隔关系')
+    ax.set_xlabel('交换间隔')
+    ax.set_ylabel('误差幅值')
     ax.legend()
     save_figure(fig, ensure_plot_dir(root) / 'peak_error_vs_interval.png')
 

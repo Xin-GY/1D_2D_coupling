@@ -34,8 +34,8 @@ def main(root: Path | str | None = None) -> None:
     geometry = load_mesh_geometry_for_case(root, case_name)
     values = build_cell_value_array(rows, 'max_depth', expected_cells=int(geometry['triangles'].shape[0]))
     fig, ax = plt.subplots(figsize=(10, 4.5))
-    sc = render_scalar_field_on_mesh(ax, geometry, values, cmap='Blues', label='Reference max depth')
-    fig.colorbar(sc, ax=ax, label='max depth (m)')
+    sc = render_scalar_field_on_mesh(ax, geometry, values, cmap='Blues', label='参考解最大水深分布')
+    fig.colorbar(sc, ax=ax, label='最大水深 (m)')
     save_figure(fig, plot_dir / '2d_max_depth_map.png')
 
 

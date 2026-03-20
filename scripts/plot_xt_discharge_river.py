@@ -33,9 +33,10 @@ def main(root: Path | str | None = None) -> None:
     times, xs, grid = _pivot(rows, 'discharge')
     fig, ax = plt.subplots(figsize=(9, 4.5))
     mesh = ax.pcolormesh(xs, times, grid, shading='auto')
-    fig.colorbar(mesh, ax=ax, label='discharge')
-    ax.set_xlabel('x')
-    ax.set_ylabel('time')
+    fig.colorbar(mesh, ax=ax, label='流量 (m$^3$/s)')
+    ax.set_title('河道流量 x-t 分布图')
+    ax.set_xlabel('河道纵向位置 x')
+    ax.set_ylabel('时间 (s)')
     save_figure(fig, plot_dir / 'xt_discharge_river.png')
 
 
