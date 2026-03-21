@@ -39,6 +39,9 @@ def test_chapter_2d_plot_modules_do_not_use_scatter(monkeypatch, chapter_analysi
         'scripts.plot_2d_arrival_time_map',
         'scripts.plot_2d_difference_map',
         'scripts.plot_flood_front_overlay',
+        'scripts.plot_ch4_5_overview_cn',
+        'scripts.plot_ch4_5_2d_maps_cn',
+        'scripts.plot_ch4_5_hydrographs_cn',
     ):
         module = importlib.import_module(module_name)
         module.main(chapter_analysis_artifacts)
@@ -59,6 +62,9 @@ def test_fastest_exact_chapter_2d_plot_modules_do_not_use_scatter(monkeypatch, f
         'scripts.plot_2d_arrival_time_map',
         'scripts.plot_2d_difference_map',
         'scripts.plot_flood_front_overlay',
+        'scripts.plot_ch4_5_overview_cn',
+        'scripts.plot_ch4_5_2d_maps_cn',
+        'scripts.plot_ch4_5_hydrographs_cn',
     ):
         module = importlib.import_module(module_name)
         module.main(fastest_exact_chapter_artifacts)

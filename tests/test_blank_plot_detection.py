@@ -72,3 +72,39 @@ def test_combined_blank_plot_audit_reports_zero_failures(fastest_exact_chapter_a
     roots = {str(row['root']) for row in audit_rows}
     assert any('chapter_coupling_analysis_fastest_exact' in root for root in roots)
     assert any('chapter_coupling_analysis' in root for root in roots)
+
+
+
+def test_chapter_cn_blank_plot_audit_targets_are_nonblank(chapter_analysis_artifacts: Path, fastest_exact_chapter_artifacts: Path):
+    targets = {
+        'coupling_schematic_cn.png',
+        'composite_case_geometry_mesh_cn.png',
+        'front_fill_case_schematic_cn.png',
+        'front_fill_stage_compare_cn.png',
+        'lateral_overtop_return_exchange_diag_cn.png',
+        'front_fast_arrival_zoom_cn.png',
+        'mixed_backwater_switch_phase_lag_vs_interval_cn.png',
+        'stage_hydrographs_1d_cn.png',
+        'discharge_hydrographs_1d_cn.png',
+        'max_depth_map_cn.png',
+        'max_depth_difference_map_cn.png',
+        'flood_front_overlay_cn.png',
+        'exchange_q_timeseries_cn.png',
+        'exchange_deta_timeseries_cn.png',
+        'exchange_volume_cumulative_cn.png',
+        'rmse_vs_interval_cn.png',
+        'phase_lag_vs_interval_cn.png',
+        'arrival_time_error_vs_interval_cn.png',
+    }
+    for artifacts_root in (chapter_analysis_artifacts, fastest_exact_chapter_artifacts):
+        for png_name in targets:
+            png_path = artifacts_root / 'plots' / png_name
+            assert png_path.exists(), f'missing {png_name}'
+            is_2d_map = png_name in {
+                'composite_case_geometry_mesh_cn.png',
+                'max_depth_map_cn.png',
+                'max_depth_difference_map_cn.png',
+                'flood_front_overlay_cn.png',
+            }
+            audit = blank_image_audit(png_path, is_2d_map=is_2d_map)
+            assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'

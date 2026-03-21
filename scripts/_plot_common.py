@@ -770,8 +770,9 @@ def audit_plot_directory(
             for row in manifest_rows
         }
     rows: list[dict[str, Any]] = []
+    raster_suffixes = {'.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff'}
     for path in sorted(directory.glob('*')):
-        if path.suffix.lower() not in {'.png', '.pdf', '.svg'}:
+        if path.suffix.lower() not in raster_suffixes:
             continue
         manifest_row = manifest_map.get(path.name)
         is_2d_map = path.name.startswith('2d_') or path.name == 'test7_geometry_and_mesh.png' or path.name == 'flood_front_overlay.png'

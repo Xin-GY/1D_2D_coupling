@@ -55,6 +55,20 @@ CHAPTER_PLOT_MODULES = {
 }
 
 
+CHAPTER_CN_MODULES = {
+    'scripts.plot_ch4_5_overview_cn': ['coupling_schematic_cn.png', 'composite_case_geometry_mesh_cn.png'],
+    'scripts.plot_ch4_5_front_fill_cn': ['front_fill_case_schematic_cn.png', 'front_fill_stage_compare_cn.png', 'front_fill_rmse_vs_interval_cn.png'],
+    'scripts.plot_ch4_5_lateral_return_cn': ['lateral_overtop_return_schematic_cn.png', 'lateral_overtop_return_stage_compare_cn.png', 'lateral_overtop_return_exchange_diag_cn.png'],
+    'scripts.plot_ch4_5_fast_arrival_cn': ['front_fast_arrival_schematic_cn.png', 'front_fast_arrival_zoom_cn.png', 'front_fast_arrival_timing_error_vs_interval_cn.png'],
+    'scripts.plot_ch4_5_mixed_backwater_cn': ['mixed_backwater_switch_schematic_cn.png', 'mixed_backwater_switch_stage_compare_cn.png', 'mixed_backwater_switch_phase_lag_vs_interval_cn.png'],
+    'scripts.plot_ch4_5_hydrographs_cn': ['stage_hydrographs_1d_cn.png', 'discharge_hydrographs_1d_cn.png'],
+    'scripts.plot_ch4_5_2d_maps_cn': ['max_depth_map_cn.png', 'max_depth_difference_map_cn.png', 'flood_front_overlay_cn.png'],
+    'scripts.plot_ch4_5_exchange_cn': ['exchange_q_timeseries_cn.png', 'exchange_deta_timeseries_cn.png', 'exchange_volume_cumulative_cn.png'],
+    'scripts.plot_ch4_5_interval_summary_cn': ['rmse_vs_interval_cn.png', 'phase_lag_vs_interval_cn.png', 'arrival_time_error_vs_interval_cn.png'],
+}
+
+
+
 def test_plot_scripts_generate_nonempty_pngs(coupling_sweep_artifacts):
     plot_dir = coupling_sweep_artifacts / 'plots'
     for module_name, png_name in PLOT_MODULES.items():
@@ -117,3 +131,26 @@ def test_fastest_exact_chapter_plot_outputs_are_nonempty(fastest_exact_chapter_a
         is_2d_map = png_name.startswith('2d_') or png_name in {'flood_front_overlay.png', 'test7_geometry_and_mesh.png'}
         audit = blank_image_audit(png_path, is_2d_map=is_2d_map)
         assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'
+
+
+def test_chapter_cn_plot_scripts_generate_png_and_pdf(chapter_analysis_artifacts, fastest_exact_chapter_artifacts):
+    for artifacts_root in (chapter_analysis_artifacts, fastest_exact_chapter_artifacts):
+        plot_dir = artifacts_root / 'plots'
+        for module_name, png_names in CHAPTER_CN_MODULES.items():
+            module = importlib.import_module(module_name)
+            module.main(artifacts_root)
+            for png_name in png_names:
+                png_path = plot_dir / png_name
+                pdf_path = plot_dir / png_name.replace('.png', '.pdf')
+                assert png_path.exists(), f'{module_name} did not create {png_name}'
+                assert pdf_path.exists(), f'{module_name} did not create {pdf_path.name}'
+                assert png_path.stat().st_size > 0
+                assert pdf_path.stat().st_size > 0
+                is_2d_map = png_name in {
+                    'composite_case_geometry_mesh_cn.png',
+                    'max_depth_map_cn.png',
+                    'max_depth_difference_map_cn.png',
+                    'flood_front_overlay_cn.png',
+                }
+                audit = blank_image_audit(png_path, is_2d_map=is_2d_map)
+                assert not audit['is_approximately_blank'], f'{png_name} is blank or near-blank'
